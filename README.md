@@ -1,18 +1,17 @@
 # Leaspy tutorial
 
-Hands-on tutorial for **[Leaspy](https://gitlab.com/icm-institute/aramislab/leaspy) v2.1**,
+Hands-on tutorial for **[Leaspy](https://gitlab.com/icm-institute/aramislab/leaspy) v2**,
 for the ICM / Paris Brain Institute workshop
 *[Challenges from Longitudinal Data](https://parisbraininstitute.org/agenda/challenges-longitudinal-data)*
 (Sept 3-4, 2026). The notebooks run on **Google Colab** — no local install needed.
 
 ## For participants
 
-Open a notebook in Colab and **run the first cell**. It installs the right
-versions, clones the repo, loads the helper library, and **restarts the runtime
-once** (leaspy needs `numpy<2`, so Colab's numpy/pandas must be realigned). When
-it reconnects, run the cell again (or *Runtime ▸ Run all*) — everything else then
-runs against a consistent setup. The exact logic is in the first cell of every
-notebook; see [`notebooks/00_template.ipynb`](notebooks/00_template.ipynb).
+Open a notebook in Colab and **run the first cell** (*Runtime ▸ Run all*). It
+installs leaspy with `--no-deps` so it reuses Colab's preinstalled numpy/torch
+(no slow downgrade, no runtime restart), clones the repo, and loads the helper
+library. The exact logic is in the first cell of every notebook; see
+[`notebooks/00_template.ipynb`](notebooks/00_template.ipynb).
 
 Throughout the notebooks you'll meet two helpers:
 

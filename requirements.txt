@@ -1,8 +1,7 @@
-# Pinned for the workshop. Colab already ships most of these; this file is for
-# running the notebooks locally. leaspy needs numpy<2, so pin the stack to match.
-leaspy==2.1.*
-numpy>=1.26.4,<2
-pandas>=2.2.2,<3
+# For running the notebooks locally. (On Colab the first cell installs leaspy
+# with --no-deps to reuse the preinstalled numpy/torch — see any notebook.)
+# Note: 2.0.2 is the latest leaspy on PyPI; there is no 2.1 published yet.
+leaspy==2.0.2
 ipywidgets
 pyyaml
 matplotlib

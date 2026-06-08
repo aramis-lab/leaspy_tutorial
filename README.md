@@ -7,15 +7,12 @@ for the ICM / Paris Brain Institute workshop
 
 ## For participants
 
-Open a notebook in Colab and run the first cell. It pins the right versions and
-loads the helper library, so everyone is on the same setup:
-
-```python
-!pip install -q "leaspy==2.1.*"
-!git clone -q --branch v1.0 https://github.com/aramis-lab/leaspy_tutorial
-import sys; sys.path.insert(0, "leaspy_tutorial")
-import tutolib as tp
-```
+Open a notebook in Colab and **run the first cell**. It installs the right
+versions, clones the repo, loads the helper library, and **restarts the runtime
+once** (leaspy needs `numpy<2`, so Colab's numpy/pandas must be realigned). When
+it reconnects, run the cell again (or *Runtime ▸ Run all*) — everything else then
+runs against a consistent setup. The exact logic is in the first cell of every
+notebook; see [`notebooks/00_template.ipynb`](notebooks/00_template.ipynb).
 
 Throughout the notebooks you'll meet two helpers:
 

@@ -1,6 +1,8 @@
 # Pinned for the workshop. Colab already ships most of these; this file is for
-# running the notebooks locally.
-leaspy==2.1.3
+# running the notebooks locally. leaspy needs numpy<2, so pin the stack to match.
+leaspy==2.1.*
+numpy>=1.26.4,<2
+pandas>=2.2.2,<3
 ipywidgets
 pyyaml
 matplotlib

@@ -1,0 +1,33 @@
+# Multiple-choice questions for the tutorial.
+#
+# One entry per question, keyed by an id you pass to tutolib.runquestion(<id>).
+#   prompt   : the question text
+#   options  : list of choices shown as radio buttons
+#   answer   : index of the correct option (0-based: first option is 0)
+#   feedback : shown when the user picks a wrong answer (keep it short, 1-3 lines)
+#
+# To add a question, just copy a block and bump the id. No Python needed.
+
+1:
+  prompt: "In a longitudinal dataset, what does a single *row* usually represent?"
+  options:
+    - "One patient"
+    - "One visit of one patient (a patient x time observation)"
+    - "One clinical variable"
+  answer: 1
+  feedback: >
+    Each row is one visit: the same patient appears on several rows, one per
+    follow-up time. That repeated-measures structure is exactly what
+    disease-progression models exploit.
+
+2:
+  prompt: "What does the tau (time-shift) individual parameter capture in a Leaspy model?"
+  options:
+    - "How fast the subject progresses"
+    - "When the subject reaches the population's average disease stage"
+    - "The measurement noise for that subject"
+  answer: 1
+  feedback: >
+    Tau is the time-shift, a disease-onset offset: it says *when* a subject
+    reaches the average stage. The *speed* of progression is the separate
+    parameter xi.

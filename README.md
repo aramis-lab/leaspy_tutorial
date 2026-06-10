@@ -1,51 +1,7 @@
 # Leaspy tutorial
 
-Hands-on tutorial for **[Leaspy](https://gitlab.com/icm-institute/aramislab/leaspy) v2**,
-for the ICM / Paris Brain Institute workshop
-*[Challenges from Longitudinal Data](https://parisbraininstitute.org/agenda/challenges-longitudinal-data)*
-(Sept 3-4, 2026). The notebooks run on **Google Colab** — no local install needed.
+you can try our example here
 
-## For participants
+https://colab.research.google.com/github/aramis-lab/leaspy_tutorial/blob/main/notebooks/00_template.ipynb
 
-Open a notebook in Colab and **run the first cell** (*Runtime ▸ Run all*). It
-installs leaspy with `--no-deps` so it reuses Colab's preinstalled numpy/torch
-(no slow downgrade, no runtime restart), clones the repo, and loads the helper
-library. The exact logic is in the first cell of every notebook; see
-[`notebooks/00_template.ipynb`](notebooks/00_template.ipynb).
-
-Throughout the notebooks you'll meet two helpers:
-
-- `tp.runquestion(<id>)` — a clickable multiple-choice question that tells you if
-  you're right and gives feedback if not.
-- `tp.solution(<id>)` — for "fill-in" cells: reveals the solution and can **run it
-  for you**, so you're never blocked from continuing.
-
-See [`notebooks/00_template.ipynb`](notebooks/00_template.ipynb) for a 1-minute demo of both.
-
-## Repo layout
-
-```
-tutolib/                 the mini helper library (runquestion / solution)
-content/
-  questions.yaml         multiple-choice questions (edit this to add questions)
-  solutions/q<id>.py     one solution snippet per fill-in exercise
-notebooks/               the tutorial notebooks (00_template is the demo)
-data/                    datasets used by the tutorial
-```
-
-## For contributors
-
-We author the **challenge** notebook directly (cells the user fills are left as
-`# To complete`) and keep each answer as a separate file the helper reads at
-runtime — no notebook-generation step.
-
-**Adding a multiple-choice question:** add a block to
-[`content/questions.yaml`](content/questions.yaml) with a new id, then call
-`tp.runquestion(<id>)` in a cell. No Python needed.
-
-**Adding a fill-in exercise:** leave a `# To complete` cell for the user, write the
-answer in `content/solutions/q<id>.py`, and add a `tp.solution(<id>)` cell after it.
-
-**Workflow:** each of us works on their own branch. Before the workshop we run every
-notebook top-to-bottom once against the pinned Leaspy version, then cut the `v1.0`
-git tag — that frozen tag is what the setup cell clones.
+You can add your now notebooks, by creating your own branch and chaging the `BRANCH` variable from the first cell.

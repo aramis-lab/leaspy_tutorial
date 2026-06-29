@@ -1,7 +1,7 @@
 # For running the notebooks locally. (On Colab the first cell installs leaspy
 # with --no-deps to reuse the preinstalled numpy/torch — see any notebook.)
-# Note: 2.0.2 is the latest leaspy on PyPI; there is no 2.1 published yet.
-leaspy==2.0.2
+# v2.1.0 is not on PyPI yet, so we install it from the git tag to match Colab.
+leaspy @ git+https://github.com/aramis-lab/leaspy.git@v2.1.0
 ipywidgets
 pyyaml
 matplotlib

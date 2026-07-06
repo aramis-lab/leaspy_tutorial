@@ -6,3 +6,4 @@ ipywidgets
 pyyaml
 matplotlib
 jupyterlab
+bokeh  # only to regenerate notebooks/assets/sigmoid_interactive.html (preinstalled on Colab)

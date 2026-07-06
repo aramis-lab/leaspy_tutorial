@@ -5,6 +5,7 @@ Call these from a notebook cell::
     import tutolib as tp
     tp.runquestion(1)     # interactive multiple-choice question
     tp.solution(3)        # reveal a solution snippet, and run it for you
+    tp.show_asset("sigmoid_interactive.html")
 
 Content is kept *outside* the code so anyone can author it without touching
 Python:
@@ -14,9 +15,10 @@ Python:
 """
 from __future__ import annotations
 
+import html
 from pathlib import Path
 
-from IPython.display import Code, display
+from IPython.display import Code, HTML, display
 
 try:
     import ipywidgets as widgets
@@ -28,6 +30,7 @@ __version__ = "0.1.0"
 # content/ sits at the repo root, next to tutolib/ — resolve it from this file so
 # it works whatever the notebook's working directory is.
 _CONTENT = Path(__file__).resolve().parent.parent / "content"
+_ASSETS_DIR = Path(__file__).resolve().parent.parent / "notebooks" / "assets"
 _QUESTIONS_FILE = _CONTENT / "questions.yaml"
 _SOLUTIONS_DIR = _CONTENT / "solutions"
 
@@ -49,6 +52,15 @@ def _ipython():
         return get_ipython()
     except Exception:
         return None
+
+
+def show_asset(name, height=700):
+    """Embed a pre-generated HTML asset in the notebook."""
+    document = (_ASSETS_DIR / name).read_text(encoding="utf-8")
+    return HTML(
+        f'<iframe srcdoc="{html.escape(document, quote=True)}" '
+        f'width="880" height="{height}" style="border:none"></iframe>'
+    )
 
 
 def runquestion(qid):

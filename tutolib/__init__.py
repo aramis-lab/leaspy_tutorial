@@ -1,3 +1,3 @@
-from .core import runquestion, solution, __version__
+from .core import runquestion, show_asset, solution, __version__
 
-__all__ = ["runquestion", "solution", "__version__"]
+__all__ = ["runquestion", "show_asset", "solution", "__version__"]

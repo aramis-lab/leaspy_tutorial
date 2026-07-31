@@ -31,3 +31,53 @@
     Tau is the time-shift, a disease-onset offset: it says *when* a subject
     reaches the average stage. The *speed* of progression is the separate
     parameter xi.
+
+3:
+  prompt: "Do you think it has converged? If not, what would you try at first?"
+  options:
+    - "Revisit the data and verify monotonicity/normalization"
+    - "Try a different model (e.g. linear)"
+    - "Add more iterations"
+  answer: 2
+  feedback: >
+    It has not converged: the chains are still drifting, they have not reached a
+    plateau. Nothing is wrong with the data or the model here, the fit was simply
+    stopped too early, after only 1 000 iterations.
+
+4:
+  prompt: "We fit three scores. Which value of `source_dimension` is NOT possible?"
+  options:
+    - "0"
+    - "2"
+    - "3"
+  answer: 2
+  feedback: >
+    The number of sources must stay strictly below the number of features: with
+    3 scores you can only use 0, 1 or 2. Sources describe the directions in which
+    subjects deviate from the mean trajectory, and there are at most
+    (features - 1) of them.
+
+5:
+  prompt: "Both models give a negative BIC. Which one fits better?"
+  options:
+    - "The one with the BIC closest to zero"
+    - "The one with the lowest (most negative) BIC"
+    - "You cannot compare, BIC is only valid when positive"
+  answer: 1
+  feedback: >
+    Lower is always better, sign included: -13600 beats -13500. BIC and AIC both
+    add a penalty for the number of parameters, so they let you ask whether extra
+    sources are actually worth their cost.
+
+6:
+  prompt: "On 3 scores, switching from `gaussian-diagonal` to `gaussian-scalar` changes the number of model parameters by:"
+  options:
+    - "-2"
+    - "0"
+    - "+1"
+  answer: 0
+  feedback: >
+    A diagonal noise fits one standard deviation per score (3 parameters), a
+    scalar one fits a single shared value (1 parameter). Fewer parameters means a
+    lighter BIC/AIC penalty, which is why the scalar model can win even if it
+    reconstructs the data slightly less well.

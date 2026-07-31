@@ -1,88 +1,190 @@
-"""Generate a self-contained interactive sigmoid figure (no live kernel needed).
+"""Generate the self-contained interactive figures (no live kernel needed).
 
-Run this ONCE locally to (re)build the HTML artifact, then commit it:
+Run this ONCE locally to (re)build the HTML artifacts, then commit them:
 
-    python notebooks/00_animations_interactif.py
+    python notebooks/00_animations_interactif.py                  # both figures
+    python notebooks/00_animations_interactif.py --sigmoid-only   # skips leaspy
+    python notebooks/00_animations_interactif.py path/to/model.json
 
-It writes  notebooks/assets/sigmoid_interactive.html  -- a standalone Bokeh
-document whose sliders are driven by client-side JS (CustomJS), so the figure
-stays interactive when embedded in a Colab/Jupyter notebook with no Python
+They are standalone Bokeh documents driven by client-side JS (CustomJS), so
+they stay interactive when embedded in a Colab/Jupyter notebook with no Python
 kernel recomputing anything.
 
-What it shows
--------------
-A *real* leaspy workflow on one feature of the synthetic Parkinson dataset
-(``leaspy.datasets.load_dataset("parkinson")``, same data as the gallery's
-``plot_02_parkinson_example``):
+notebooks/assets/sigmoid_interactive.html
+-----------------------------------------
+The **average trajectories** of the three Parkinson scores of the fit run in
+``notebooks/fit.ipynb`` (``LogisticModel(source_dimension=2)`` on MDS1_total /
+SCOPA_total / MOCA_total) -- the same curves as the notebook's
 
-* grey dashed curve  -- the fitted **population-average** trajectory (the curve
-  at the mean parameters: tau = tau_mean, xi = 0),
-* three real patients, each shown as their fitted logistic curve + their real
-  visit dots:
-    - the **main** patient -- driven by the sliders (this is personalization),
-    - an **earlier & slower** patient (opposite corner from the main one),
-    - an **≈ average** patient (tau ~ tau_mean, xi ~ 0) whose curve nearly
-      overlaps the grey line -- making it intuitive that the population curve is
-      the trajectory of the *average-parameter* patient.
+    Plotting(model_2_sources).average_trajectory(alpha=1, n_std_left=2, n_std_right=8)
 
-Click a legend entry to hide/show that patient (Bokeh interactive legend).
+same time window, same tab10 colors leaspy's ``Plotting`` gives the features.
+No visits are drawn: these are population curves, not patients.
 
-The two main sliders are the main patient's individual parameters; g is the
-shared population baseline. Drag tau/xi to *see what personalization does*: find
-the (tau, xi) that make the curve pass through the patient's dots.
+Three sliders -- and *which curves each one moves* is itself the lesson:
 
-    tau  -- onset / time-shift   : slides the curve left <-> right
-    xi   -- log-speed            : alpha = exp(xi) compresses/stretches time
-    g    -- population baseline  : p0 = 1/(1+g); reshapes every curve
+    tau  -- onset / time-shift  (individual) : slides ALL THREE curves at once
+    g    -- baseline            (population) : p0 = 1/(1+g), MDS1_total only
+    v0   -- velocity            (population) : slope at the onset, MDS1_total only
 
-The maths mirror leaspy's univariate logistic model. For one patient the
-trajectory is the closed-form sigmoid (LogisticModel + reparametrized time
-rt = exp(xi) * (t - tau)):
+That asymmetry is the model's, not a display choice. ``tau`` is an *individual*
+latent variable, drawn once per subject with no feature axis (``tau_mean =
+ModelParameter.for_ind_mean("tau", shape=(1,))``, a single scalar): a subject is
+early or late *as a whole person*, so there is no per-feature tau to drag. Same
+for xi. ``log_g_mean`` and ``log_v0_mean`` in contrast have shape
+``(dimension,)``, one entry per feature, so dragging them changes that one score
+alone -- exactly as the model can.
 
-    p(t) = 1 / (1 + g * exp( -(g+1)^2/g * v0 * exp(xi)*(t - tau) ))
+Features *can* end up offset from one another in time, but through the sources,
+never through tau. In ``model_with_sources`` the space shift enters as
 
-where the population parameters g (= 1/p0 - 1) and v0, and the reference age
-tau_mean, all come from the fitted model.
+    metric_k * (v0_k * rt + w_k) = metric_k * v0_k * (rt + w_k / v0_k)
 
-If leaspy or the dataset are unavailable, the script falls back to a single
-synthetic patient so it still produces a usable figure.
+so w_k *is* a per-feature time shift of w_k/v0_k years. But ``space_shifts`` are
+built on ``OrthoBasis("v0", "metric_sqr")``, hence orthogonal to metric*v0, which
+pins those shifts to ``sum_k metric_k * v0_k^2 * delta_k = 0``: advancing one
+feature necessarily delays the others. A tau slider moving one curve with the
+other two frozen would draw the one thing the geometry forbids.
+
+The individual log-speed **xi is deliberately not a slider**, for two reasons:
+
+* it would be redundant here -- a curve depends on v0 and xi only through the
+  product ``v0 * exp(xi)``, so sliding xi by +0.5 is *exactly* multiplying v0
+  by e^0.5.  leaspy says as much: ``_center_xi_realizations`` subtracts the mean
+  of xi and adds it back to ``log_v0`` at every MCMC-SAEM iteration, "to reduce
+  redundancy in the parameter space (i.e. improve identifiability)".  In
+  ``SharedSpeedLogisticModel``, where every feature shares one speed, leaspy
+  drops ``log_v0_mean`` outright and stores it as ``xi_mean``;
+* these are *average* trajectories, and the average trajectory **is** the
+  xi = 0 curve.  That is not a convention: ``xi_mean`` is a fixed
+  ``Hyperparameter(0.0)``, never estimated, and the centering above forces the
+  fitted xi to average to 0 -- whatever speed the cohort has lives in v0.
+
+Pass e.g. ``sliders=("tau", "xi", "g")`` to :func:`build` to get xi back.
+
+The maths mirror leaspy's logistic model. Per feature k, with reparametrized
+time rt = exp(xi) * (t - tau) and no sources, ``LogisticModel.model_with_sources``
+reduces to the closed-form sigmoid
+
+    p_k(t) = 1 / (1 + g_k * exp( -(g_k+1)^2/g_k * v0_k * exp(xi)*(t - tau) ))
+
+(checked against ``model.compute_mean_traj``: max abs. difference ~1e-7). The
+average trajectory is that curve at the mean parameters, tau = tau_mean and
+xi = xi_mean = 0.
+
+notebooks/assets/reparam_morph.html
+-----------------------------------
+The reparametrization animation -- see :func:`build_morph`. Unlike the figure
+above it needs leaspy and the dataset (it fits and personalizes a univariate
+model to get every patient's real visits); it is skipped if they are missing.
 """
 
+import math
+import sys
 from pathlib import Path
 
 from bokeh.embed import file_html
-from bokeh.layouts import column, row
-from bokeh.models import Button, ColumnDataSource, CustomJS, Div, InlineStyleSheet, Slider, Span, Label
+from bokeh.layouts import column
+from bokeh.models import ColumnDataSource, CustomJS, Div, InlineStyleSheet, Slider, Span, Label
 from bokeh.plotting import figure
 from bokeh.resources import CDN
 
+N = 400  # points along the time axis for the drawn curves
+
+# --- The fit the sigmoid figure draws: notebooks/fit.ipynb -------------------
+# Population parameters of `model_2_sources` as printed by its `summary()`
+# (LogisticModel, source_dimension=2, seed=0, 1000 iterations, trained on
+# df_train = subjects up to GS-160). MCMC-SAEM only replays exactly on an
+# identical stack -- refitting here lands ~0.5 yr away on tau_mean -- so we ship
+# the notebook's own numbers. Pass a `model.save(...)` JSON to rebuild from
+# another fit.
+FIT = dict(
+    features=["MDS1_total", "SCOPA_total", "MOCA_total"],
+    log_g_mean=[1.9108, 1.4149, 2.2763],
+    log_v0_mean=[-4.9361, -4.6442, -5.2808],
+    tau_mean=66.0522,
+    tau_std=9.7451,
+    xi_std=0.7576,
+)
+# Index in FIT["features"] of the curve the per-feature sliders (g, v0) drive.
+# tau is shared by the whole model, so it always drives every curve.
+INTERACTIVE_IX = 0
+# Time window, as passed to `average_trajectory` in the notebook: the plot spans
+# tau_mean + max(tau_std, 4) * [-N_STD_LEFT, +N_STD_RIGHT].
+N_STD_LEFT, N_STD_RIGHT = 2, 8
+
+# matplotlib's tab10, the palette leaspy's `Plotting` defaults to.
+TAB10 = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
+         "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"]
+
+# --- Reparametrization morph (build_morph) ----------------------------------
 # Which Parkinson feature to model (univariate). MDS2_total = MDS-UPDRS part II.
 FEATURE = "MDS2_total"
-N = 400  # points along the time axis for the drawn curves
-AGE_MIN, AGE_MAX = 50.0, 90.0  # fixed display window (also gates patient picks)
-
-# Per-role styling.
-COLOR = {"main": "#1f77b4", "opp": "#ff7f0e", "avg": "#2ca02c"}
+AGE_MIN, AGE_MAX = 50.0, 90.0  # window patients must fall in to be picked
 
 
-def _label(pt):
-    return {
-        "main": f"{pt['id']} — this patient (sliders)",
-        "opp": f"{pt['id']} — earlier & slower",
-        "avg": f"{pt['id']} — ≈ average",
-    }[pt["role"]]
+def palette(n):
+    """The `n` first colors leaspy's `Plotting` hands to the features.
+
+    `Plotting(model).colors()` evaluates `mpl.colormaps["tab10"].resampled(10)`
+    at the feature indices, i.e. plain tab10 in feature order. Derived from
+    matplotlib when it is installed so the two can't drift apart.
+    """
+    try:
+        import matplotlib as mpl
+        from matplotlib.colors import to_hex
+
+        cmap = mpl.colormaps["tab10"].resampled(10)
+        return [to_hex(c) for c in cmap(list(range(n)))]
+    except Exception:  # matplotlib is optional for this script
+        return TAB10[:n]
+
+
+def fit_facts(model_json=None):
+    """Population parameters of the fit -> everything the sigmoid figure draws.
+
+    Defaults to the numbers recorded in ``notebooks/fit.ipynb`` (see `FIT`);
+    pass the path of a model saved with ``model.save(...)`` to use that fit
+    instead. Returns g and v0 per feature on their interpretable scale
+    (g = 1/p0 - 1 = exp(log_g), v0 = exp(log_v0)).
+    """
+    p = dict(FIT)
+    if model_json is not None:
+        import json
+
+        saved = json.loads(Path(model_json).read_text(encoding="utf-8"))
+        sp = saved["parameters"]
+        p = dict(
+            features=list(saved["features"]),
+            log_g_mean=list(sp["log_g_mean"]),
+            log_v0_mean=list(sp["log_v0_mean"]),
+            tau_mean=float(sp["tau_mean"][0]),
+            tau_std=float(sp["tau_std"][0]),
+            xi_std=float(sp["xi_std"][0]),
+        )
+
+    return dict(
+        features=p["features"],
+        colors=palette(len(p["features"])),
+        g=[math.exp(x) for x in p["log_g_mean"]],
+        v0=[math.exp(x) for x in p["log_v0_mean"]],
+        tau_mean=p["tau_mean"],
+        tau_std=p["tau_std"],
+        xi_std=p["xi_std"],
+        source=("model json" if model_json else "fit.ipynb"),
+    )
 
 
 def model_facts():
-    """Fit a univariate logistic on one Parkinson feature and return the real
-    population params + three illustrative patients (main / opposite / average),
-    each with their fitted (tau, xi) and real visits. Falls back to a single
-    synthetic patient if leaspy / the dataset aren't available."""
+    """Fit and personalize a univariate logistic on one Parkinson feature and
+    return the population params + every patient's fitted (tau, xi) and real
+    visits, plus a handful of well-fit patients to spotlight -- the raw material
+    of the reparametrization morph. Falls back to synthetic params (which make
+    :func:`main` skip the morph) if leaspy / the dataset aren't available."""
     try:
         import warnings
 
         warnings.filterwarnings("ignore")
-        import math
 
         import numpy as np
         from leaspy.datasets import load_dataset
@@ -106,11 +208,9 @@ def model_facts():
         def sig(t, tau, xi):
             return 1.0 / (1.0 + g * math.exp(-metric * v0 * math.exp(xi) * (t - tau)))
 
-        # Two pools, both restricted to patients whose visits fall inside the
-        # display window (so their dots are visible). `allp` (>=6 visits) is broad
-        # enough to contain patients with xi ~ 0; `mainp` additionally needs a
-        # clear progression so the slider-controlled patient visibly rises.
-        allp, mainp = [], []  # (mse, pid, tau, xi)
+        # Pool of patients whose visits all fall inside the display window (so
+        # nothing flies off-screen), with enough visits to be worth spotlighting.
+        allp = []  # (mse, pid, tau, xi)
         for pid, sub in df.groupby(level=0):
             s = sub.reset_index()
             ages = s["TIME"]
@@ -120,40 +220,7 @@ def model_facts():
             mse = float(np.mean([(sig(t, tau, xi) - y) ** 2
                                  for t, y in zip(ages, s[FEATURE])]))
             allp.append((mse, pid, tau, xi))
-            if len(s) >= 8 and (s[FEATURE].max() - s[FEATURE].min()) >= 0.3:
-                mainp.append((mse, pid, tau, xi))
-        main_mse, main_id, main_tau, main_xi = min(mainp)
 
-        # Among the decently-fit half, pick the patient nearest each target point
-        # in (tau, xi) space (5 yr ~ 1 xi unit). "avg" sits on the population
-        # curve (tau_mean, 0); "opp" mirrors the main patient across that mean.
-        med = float(np.median([q[0] for q in allp]))
-        decent = [q for q in allp if q[0] <= med]
-
-        def nearest(tt, tx, exclude):
-            cand = [q for q in decent if q[1] not in exclude]
-            return min(cand, key=lambda q: ((q[2] - tt) / 5.0) ** 2 + (q[3] - tx) ** 2)[1]
-
-        # "avg" sits on the population curve (tau_mean, xi~0). "opp" is clearly
-        # earlier AND slower than average (the opposite corner from a late/fast
-        # main patient) and well-fit -- picked as the best-fitting such patient so
-        # it stays visually distinct from both the average and the main patient.
-        avg_id = nearest(t0, 0.0, {main_id})
-        opp = [q for q in allp if q[2] <= t0 - 3 and q[3] <= -0.25
-               and q[1] not in {main_id, avg_id}]
-        opp_id = (min(opp)[1] if opp
-                  else nearest(2 * t0 - main_tau, -main_xi, {main_id, avg_id}))
-
-        def record(pid, role):
-            s = df.loc[pid].reset_index()
-            return dict(id=pid, role=role,
-                        tau=float(ip.loc[pid, "tau"]), xi=float(ip.loc[pid, "xi"]),
-                        obs_t=s["TIME"].tolist(), obs_y=s[FEATURE].tolist())
-
-        # Order matters: index 0 is the slider-controlled patient.
-        patients = [record(main_id, "main"), record(opp_id, "opp"), record(avg_id, "avg")]
-
-        # --- Extra data for the reparametrization morph (build_morph) ---------
         # Every patient's fitted (tau, xi) + real visits, so the morph can draw
         # the whole cohort as a faded spaghetti and slide a chosen few onto the
         # reparametrized timeline.
@@ -180,34 +247,38 @@ def model_facts():
             highlight_ids.append(top_score)
 
         return dict(source="real", feature=FEATURE, g=g, v0=v0, t0=t0,
-                    patients=patients, all_patients=all_patients,
-                    highlight_ids=highlight_ids)
+                    all_patients=all_patients, highlight_ids=highlight_ids)
     except Exception as exc:  # pragma: no cover - fallback path
-        print(f"(real-data fit unavailable: {exc!r} -- using synthetic params)")
-        return dict(
-            source="synthetic", feature="score", g=5.0, v0=0.01, t0=68.0,
-            patients=[dict(id="synthetic", role="main", tau=66.0, xi=0.3,
-                           obs_t=[], obs_y=[])],
-        )
+        print(f"(real-data fit unavailable: {exc!r} -- morph will be skipped)")
+        return dict(source="synthetic", feature="score", g=5.0, v0=0.01, t0=68.0)
 
 
 def sigmoid(t, tau, xi, *, g, v0):
-    import math
-
+    """leaspy's logistic trajectory of one feature, sampled at the ages `t`."""
     metric = (g + 1) ** 2 / g
     a = math.exp(xi)
     return [1.0 / (1.0 + g * math.exp(-metric * v0 * a * (ti - tau))) for ti in t]
 
 
-def build(f, *, show_g=False, show_v0=False):
-    """Build the standalone HTML. ``show_g`` / ``show_v0`` expose the population
-    shape parameters as extra sliders (they reshape every curve)."""
-    g, v0, t0 = f["g"], f["v0"], f["t0"]
-    patients = f["patients"]
-    main = patients[0]
+def build(f, *, sliders=("tau", "g", "v0")):
+    """Build the standalone HTML: the average trajectory of every feature of the
+    fit. tau/xi reparametrize time for the whole model, so they move every curve;
+    g and v0 are per-feature, so they move the ``INTERACTIVE_IX``-th one alone.
 
-    # Fixed age axis.
-    t_min, t_max = AGE_MIN, AGE_MAX
+    ``sliders`` picks which of "tau", "xi", "g", "v0" are exposed, in order.
+    The default leaves "xi" out on purpose -- see the module docstring: it is
+    redundant with v0 on a single curve, and the average trajectory *is* the
+    xi = 0 curve. The four Slider objects are always built (the callback reads
+    all of them); only the requested ones make it into the layout.
+    """
+    feats, colors, gs, v0s = f["features"], f["colors"], f["g"], f["v0"]
+    t0, tau_std = f["tau_mean"], f["tau_std"]
+    ix = INTERACTIVE_IX
+
+    # Same age window as `Plotting.average_trajectory` draws it in fit.ipynb:
+    # tau_mean + max(tau_std, 4) * [-n_std_left, n_std_right].
+    span = max(tau_std, 4.0)
+    t_min, t_max = t0 - N_STD_LEFT * span, t0 + N_STD_RIGHT * span
 
     # Geometry: we fix the *data frame* size (not total width). The legend is
     # added outside on the right, so it extends the total width without shrinking
@@ -217,58 +288,75 @@ def build(f, *, show_g=False, show_v0=False):
     BORDER_L, BORDER_R = 62, 8
 
     t = [t_min + (t_max - t_min) * i / (N - 1) for i in range(N)]
-    # One curve source per patient (aligned with `patients`; index 0 = main).
-    curve_srcs = [ColumnDataSource(dict(t=t, y=sigmoid(t, pt["tau"], pt["xi"], g=g, v0=v0)))
-                  for pt in patients]
-    fixed_tau = [pt["tau"] for pt in patients]
-    fixed_xi = [pt["xi"] for pt in patients]
-    mean_src = ColumnDataSource(dict(t=t, y=sigmoid(t, t0, 0.0, g=g, v0=v0)))
 
-    if f["source"] == "real":
-        title = f"leaspy logistic on real data — Parkinson {f['feature']} (3 patients)"
-    else:
-        title = "leaspy univariate logistic — move one patient with τ and speed"
+    # Slider grids. The fitted values are the sliders' starting point, their
+    # magnet and what "reset" returns to, so snap them onto the grid once here:
+    # a magnet off the grid could not be reached by dragging.
+    lo = dict(tau=t_min, xi=-1.5, g=0.2, v0=0.001)
+    # ξ spans ~ ±2-3 fitted xi_std; g and v0 stretch well past the fit (and are
+    # widened if another fit lands outside), enough to deform the curve a lot.
+    hi = dict(tau=t_max, xi=2.5, g=max(12.0, 1.5 * gs[ix]),
+              v0=max(0.03, 2.5 * v0s[ix]))
+    step = dict(tau=0.1, xi=0.02, g=0.05, v0=0.0002)
+
+    def snap(key, value):
+        return lo[key] + round((value - lo[key]) / step[key]) * step[key]
+
+    fitted = dict(tau=snap("tau", t0), xi=snap("xi", 0.0),
+                  g=snap("g", gs[ix]), v0=snap("v0", v0s[ix]))
+
+    # Average trajectory of each feature = the model at the mean individual
+    # parameters (tau = tau_mean, xi = xi_mean = 0, sources = 0). EVERY feature
+    # gets a live source: tau/xi are one scalar for the whole subject, so a drag
+    # on tau has to slide the three curves together. g and v0 carry a feature
+    # axis, so only feature `ix` reads them from the sliders -- the others keep
+    # their fitted (gs[k], v0s[k]).
+    live_srcs = [
+        ColumnDataSource(dict(
+            t=t, y=sigmoid(t, fitted["tau"], fitted["xi"],
+                           g=fitted["g"] if k == ix else gs[k],
+                           v0=fitted["v0"] if k == ix else v0s[k])))
+        for k in range(len(feats))
+    ]
 
     p = figure(
-        title=title,
-        x_axis_label="age (years)",
-        y_axis_label=f"normalized {f['feature']}",
+        x_axis_label="Age",
+        y_axis_label="Normalized score",
         frame_width=FRAME_W, frame_height=FRAME_H,
-        x_range=(t_min, t_max), y_range=(-0.02, 1.02),
+        # leaspy clamps logistic plots to (0, 1); a hair of padding keeps the
+        # saturated ends of the curves from being cut in half by the frame.
+        x_range=(t_min, t_max), y_range=(-0.015, 1.015),
         min_border_left=BORDER_L, min_border_right=BORDER_R,
         tools="", toolbar_location=None,
     )
 
-    # Population average (drawn first, sits underneath).
-    p.line("t", "y", source=mean_src, line_width=2, line_dash="dashed",
-           color="#9e9e9e", legend_label="population average")
+    # The features, in model order and in leaspy's own colors.
+    for k, (name, col) in enumerate(zip(feats, colors)):
+        p.line("t", "y", source=live_srcs[k], color=col, line_width=4,
+               legend_label=name)
 
-    # Patients: extras first (50% alpha), main last so it sits on top. Each
-    # patient's curve and dots share a legend label -> one click toggles both.
-    draw_order = [pt for pt in patients if pt["role"] != "main"] + [main]
-    for pt in draw_order:
-        i = patients.index(pt)
-        is_main = pt["role"] == "main"
-        col, lab = COLOR[pt["role"]], _label(pt)
-        # Extras are 80% transparent (alpha 0.2) so the blue main patient stands out.
-        a = 1.0 if is_main else 0.2
-        p.line("t", "y", source=curve_srcs[i], color=col, legend_label=lab,
-               line_width=3 if is_main else 2.5, line_alpha=a)
-        if pt["obs_t"]:
-            p.scatter("t", "y",
-                      source=ColumnDataSource(dict(t=pt["obs_t"], y=pt["obs_y"])),
-                      color=col, legend_label=lab,
-                      size=8 if is_main else 7,
-                      fill_alpha=0.55 if is_main else 0.2, line_alpha=a)
-
-    # Onset marker + alpha readout track the MAIN patient.
-    onset = Span(location=main["tau"], dimension="height", line_color=COLOR["main"],
-                 line_dash="dotted", line_width=1.5)
+    # Onset marker: tau belongs to the subject, not to any one score, so the line
+    # is neutral grey rather than the interactive feature's color.
+    onset = Span(location=fitted["tau"], dimension="height",
+                 line_color="#555555", line_dash="dotted", line_width=1.5)
     p.add_layout(onset)
-    alpha_label = Label(x=t_min + 1, y=0.92, text_font_size="11pt",
-                        text_color=COLOR["main"],
-                        text=f"α = exp(ξ) = {2.718281828 ** main['xi']:.2f}")
-    p.add_layout(alpha_label)
+
+    # α = exp(ξ) is only worth reading out when ξ is one of the sliders --
+    # otherwise it is pinned to 1 and says nothing.
+    show_alpha = "xi" in sliders
+
+    def readout_text(xi, g):
+        alpha = f"α = exp(ξ) = {math.exp(xi):.2f}      " if show_alpha else ""
+        return f"{alpha}p₀ = 1/(1+g) = {1 / (1 + g):.3f}"
+
+    # Opaque background: the onset line is full-height and would otherwise be
+    # drawn straight through the text whenever τ sits under it.
+    readout = Label(x=t_min + 0.02 * (t_max - t_min), y=0.93,
+                    text_font_size="11pt", text_color=colors[ix],
+                    text=readout_text(fitted["xi"], fitted["g"]),
+                    background_fill_color="white", background_fill_alpha=0.85,
+                    padding=3)
+    p.add_layout(readout)
 
     # Shown only when g = 1: a faint midline at 0.5 on the plot + a note (a Div in
     # the layout, reserved height so it doesn't shift the sliders) explaining that
@@ -282,14 +370,28 @@ def build(f, *, show_g=False, show_v0=False):
 
     # Move the legend outside to the right and make it a clickable table.
     legend = p.legend[0]
+    legend.title = "Features"           # same legend title as leaspy's Plotting
     legend.click_policy = "hide"
     legend.label_text_font_size = "9pt"
     p.add_layout(legend, "right")
 
     # Sliders. Width = frame width, left margin = left border -> aligned track.
-    # Steps are chosen so the magnet values land exactly on the slider grid.
     smargin = (4, 0, 4, BORDER_L)
-    mtau, mxi = round(main["tau"], 1), round(main["xi"], 2)  # GS-001's fitted values
+
+    def make(key, title, **kw):
+        # `name` is only there to make the sliders reachable from the console /
+        # a test script: doc.get_model_by_name("tau").value = 90
+        return Slider(name=key, start=lo[key], end=hi[key], value=fitted[key],
+                      step=step[key], title=title, width=FRAME_W,
+                      margin=smargin, **kw)
+
+    # Titles say which *level* each parameter lives at, because that is exactly
+    # what decides whether the slider moves one curve or all three.
+    tau_slider = make("tau", "onset  τ   (individual — time-shift, all features)")
+    xi_slider = make("xi", "speed  ξ   (individual — log-acceleration, α = exp ξ)")
+    g_slider = make("g", f"baseline  g   (population — p₀ = 1/(1+g), {feats[ix]})")
+    v0_slider = make("v0", f"velocity  v₀   (population — slope at the onset, "
+                           f"{feats[ix]})", format="0.0000")
 
     def magnet(slider, points, tol):
         """Snap the slider to any of `points` when dragged within `tol` of it."""
@@ -298,81 +400,68 @@ def build(f, *, show_g=False, show_v0=False):
             code="for (let k=0;k<M.length;k++){"
                  "if (Math.abs(s.value-M[k])<=tol && s.value!==M[k]){s.value=M[k];break;}}"))
 
-    tau_slider = Slider(start=t_min, end=t_max, value=main["tau"], step=0.1,
-                        title="onset  τ  (time-shift)", width=FRAME_W, margin=smargin)
-    xi_slider = Slider(start=-1.5, end=2.5, value=main["xi"], step=0.02,
-                       title="speed  ξ  (log-acceleration)", width=FRAME_W, margin=smargin)
-    # g and v0 are population (shape) params: exposed as extra sliders via
-    # show_g / show_v0. Either way the JS reads `.value`, so we always hand the
-    # callback real Slider objects but only add the requested ones to the layout.
-    g_slider = Slider(start=0.2, end=12.0, value=g, step=0.05,
-                      title="baseline  g   (p₀ = 1/(1+g))",
-                      width=FRAME_W, margin=smargin)
-    v0_slider = Slider(start=0.001, end=0.05, value=v0, step=0.001, format="0.000",
-                       title="velocity  v₀  (slope at onset)", width=FRAME_W, margin=smargin)
-
     # Magnets: register BEFORE the recompute callback so the snapped value is the
     # one used to redraw the curve. g has two: the special g=1 and the fitted g.
-    g_magnets = [1.0, round(g, 2)]
-    magnet(tau_slider, [mtau], 0.5)
-    magnet(xi_slider, [mxi], 0.1)
+    g_magnets = [1.0, fitted["g"]]
+    magnet(tau_slider, [fitted["tau"]], 0.5)
+    magnet(xi_slider, [fitted["xi"]], 0.1)
     magnet(g_slider, g_magnets, 0.2)
+    magnet(v0_slider, [fitted["v0"]], 0.0004)
 
     # Gray dots on the track marking each magnet (default values). Bokeh 3 renders
     # the slider inside a shadow root, so we inject CSS *into* it via stylesheets;
     # the noUi track elements are reachable there. Up to two dots (::before/::after).
-    def magnet_dots(slider, magnets, lo, hi):
+    def magnet_dots(slider, magnets, key):
         dot = ("content:'';position:absolute;top:50%;width:9px;height:9px;"
                "margin:-4.5px 0 0 -4.5px;border-radius:50%;background:#9e9e9e;"
                "pointer-events:none;z-index:5;")
         css = ".noUi-target{position:relative;}"
         for m, ps in zip(magnets, ("after", "before")):
-            css += ".noUi-target::%s{%sleft:%.3f%%;}" % (ps, dot, (m - lo) / (hi - lo) * 100)
+            css += ".noUi-target::%s{%sleft:%.3f%%;}" % (
+                ps, dot, (m - lo[key]) / (hi[key] - lo[key]) * 100)
         slider.stylesheets = [InlineStyleSheet(css=css)]
 
-    magnet_dots(tau_slider, [mtau], t_min, t_max)
-    magnet_dots(xi_slider, [mxi], -1.5, 2.5)
-    magnet_dots(g_slider, g_magnets, 0.2, 12.0)
+    magnet_dots(tau_slider, [fitted["tau"]], "tau")
+    magnet_dots(xi_slider, [fitted["xi"]], "xi")
+    magnet_dots(g_slider, g_magnets, "g")
+    magnet_dots(v0_slider, [fitted["v0"]], "v0")
 
-    # One callback recomputes every curve. The main patient (index 0) follows the
-    # τ/ξ sliders; the extras keep their fixed fitted (τ, ξ). All curves and the
-    # population line share g, v0, so g/v0 reshape everything at once. The real
-    # visit dots are data, not model -> they never move.
+    # One callback redraws every feature. τ/ξ reparametrize the time axis shared
+    # by all of them; g/v0 reshape feature `ix` only, the others keeping the
+    # fitted GS[k]/V0S[k] -- which is precisely the model's own asymmetry.
     callback = CustomJS(
-        args=dict(srcs=curve_srcs, ptau=fixed_tau, pxi=fixed_xi, msrc=mean_src,
-                  onset=onset, alpha_label=alpha_label, mid_line=mid_line,
-                  mid_div=mid_div, tau=tau_slider, xi=xi_slider,
-                  g=g_slider, v0=v0_slider, t0=t0),
+        args=dict(srcs=live_srcs, ix=ix, GS=list(gs), V0S=list(v0s),
+                  onset=onset, readout=readout, mid_line=mid_line,
+                  mid_div=mid_div, tau=tau_slider, xi=xi_slider, g=g_slider,
+                  v0=v0_slider, show_alpha=show_alpha),
         code="""
-        const G = g.value, V0 = v0.value, metric = Math.pow(G + 1, 2) / G;
+        const G = g.value, A = Math.exp(xi.value), TAU = tau.value;
         for (let k = 0; k < srcs.length; k++) {
-            const s = srcs[k], t = s.data['t'], y = s.data['y'];
-            const TAU = (k === 0) ? tau.value : ptau[k];
-            const XI  = (k === 0) ? xi.value  : pxi[k];
-            const a = Math.exp(XI);
+            const Gk = (k === ix) ? G : GS[k];
+            const Vk = (k === ix) ? v0.value : V0S[k];
+            const metric = Math.pow(Gk + 1, 2) / Gk;
+            const t = srcs[k].data['t'], y = srcs[k].data['y'];
             for (let i = 0; i < t.length; i++)
-                y[i] = 1 / (1 + G * Math.exp(-metric * V0 * a * (t[i] - TAU)));
-            s.change.emit();
+                y[i] = 1 / (1 + Gk * Math.exp(-metric * Vk * A * (t[i] - TAU)));
+            srcs[k].change.emit();
         }
-        const mt = msrc.data['t'], my = msrc.data['y'];
-        for (let i = 0; i < mt.length; i++)
-            my[i] = 1 / (1 + G * Math.exp(-metric * V0 * (mt[i] - t0)));
-        msrc.change.emit();
-        onset.location = tau.value;
-        alpha_label.text = "α = exp(ξ) = " + Math.exp(xi.value).toFixed(2);
-        const showMid = Math.abs(g.value - 1) < 0.06;
+        onset.location = TAU;
+        readout.text = (show_alpha ? "α = exp(ξ) = " + A.toFixed(2) + "      " : "")
+                     + "p₀ = 1/(1+g) = " + (1 / (1 + G)).toFixed(3);
+        const showMid = Math.abs(G - 1) < 0.06;
         mid_line.visible = showMid;
         mid_div.text = showMid
             ? "<b>g = 1</b> → p(τ) = 0.5 : at the onset τ the trajectory is exactly at its midpoint."
             : "";
         """,
     )
-    extra = ([g_slider] if show_g else []) + ([v0_slider] if show_v0 else [])
-    sliders = [tau_slider, xi_slider] + extra
-    for s in sliders:
+    by_key = dict(tau=tau_slider, xi=xi_slider, g=g_slider, v0=v0_slider)
+    shown = [by_key[k] for k in sliders]
+    for s in shown:
         s.js_on_change("value", callback)
 
-    return file_html(column(p, mid_div, *sliders), CDN, "leaspy interactive sigmoid")
+    return file_html(column(p, mid_div, *shown), CDN,
+                     "leaspy interactive sigmoid")
 
 
 # Self-running autoplay script injected into the standalone HTML. It drives the
@@ -622,25 +711,35 @@ def build_morph(f):
                      template=_MORPH_TEMPLATE)
 
 
-def main():
-    facts = model_facts()
+def main(model_json=None, *, sigmoid=True, morph=True):
     assets = Path(__file__).resolve().parent / "assets"
     assets.mkdir(parents=True, exist_ok=True)
-    out = assets / "sigmoid_interactive.html"
-    out.write_text(build(facts, show_g=True), encoding="utf-8")  # sliders: τ, ξ, g
-    tag = f"{facts['source']} data"
-    if facts["source"] == "real":
-        ids = ", ".join(f"{pt['role']}={pt['id']}" for pt in facts["patients"])
-        tag += f": {facts['feature']}, g={facts['g']:.2f} v0={facts['v0']:.4f} " \
-               f"tau_mean={facts['t0']:.1f} | {ids}"
-    print(f"wrote {out}  ({tag})")
 
-    # Reparametrization morph (raw spaghetti → reparametrized, animated).
-    if facts["source"] == "real" and facts.get("all_patients"):
-        out2 = assets / "reparam_morph.html"
-        out2.write_text(build_morph(facts), encoding="utf-8")
-        print(f"wrote {out2}  (highlighted: {', '.join(facts['highlight_ids'])})")
+    # Average trajectories of the notebook's fit -- needs no leaspy, just `FIT`
+    # (or the population parameters of the model JSON passed on the CLI).
+    if sigmoid:
+        facts = fit_facts(model_json)
+        out = assets / "sigmoid_interactive.html"
+        out.write_text(build(facts), encoding="utf-8")
+        fts = ", ".join(f"{n} (g={g:.2f}, v0={v:.4f})"
+                        for n, g, v in zip(facts["features"], facts["g"], facts["v0"]))
+        print(f"wrote {out}  (params from {facts['source']}: "
+              f"tau_mean={facts['tau_mean']:.2f} | {fts})")
+
+    # Reparametrization morph (raw spaghetti → reparametrized, animated). This
+    # one refits from the dataset, so it is skipped without leaspy.
+    if morph:
+        cohort = model_facts()
+        if cohort["source"] == "real" and cohort.get("all_patients"):
+            out2 = assets / "reparam_morph.html"
+            out2.write_text(build_morph(cohort), encoding="utf-8")
+            print(f"wrote {out2}  ({cohort['feature']}, "
+                  f"highlighted: {', '.join(cohort['highlight_ids'])})")
 
 
 if __name__ == "__main__":
-    main()
+    flags = {a for a in sys.argv[1:] if a.startswith("--")}
+    path = next((a for a in sys.argv[1:] if not a.startswith("--")), None)
+    main(path,
+         sigmoid="--morph-only" not in flags,
+         morph="--sigmoid-only" not in flags)

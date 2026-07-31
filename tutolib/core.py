@@ -54,6 +54,11 @@ def _ipython():
         return None
 
 
+def asset_path(name):
+    """Path to a file shipped in ``notebooks/assets/``, whatever the cwd."""
+    return _ASSETS_DIR / name
+
+
 def show_asset(name, height=700):
     """Embed a pre-generated HTML asset in the notebook."""
     document = (_ASSETS_DIR / name).read_text(encoding="utf-8")

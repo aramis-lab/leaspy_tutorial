@@ -21,18 +21,30 @@ SCOPA_total / MOCA_total) -- the same curves as the notebook's
 same time window, same tab10 colors leaspy's ``Plotting`` gives the features.
 No visits are drawn: these are population curves, not patients.
 
-``MDS1_total`` is the one you can play with: its curve is wired to three
-sliders, while SCOPA_total and MOCA_total stay at their fitted average.
+Three sliders -- and *which curves each one moves* is itself the lesson:
 
-    tau  -- onset / time-shift   : slides the curve left <-> right
-    g    -- baseline             : p0 = 1/(1+g), the value reached at the onset
-    v0   -- velocity             : how steep the curve is at that onset
+    tau  -- onset / time-shift  (individual) : slides ALL THREE curves at once
+    g    -- baseline            (population) : p0 = 1/(1+g), MDS1_total only
+    v0   -- velocity            (population) : slope at the onset, MDS1_total only
 
-g and v0 are MDS1_total's *own* population parameters -- ``log_v0_mean`` has
-shape ``(dimension,)``, one per feature -- so dragging them changes that score
-alone, exactly as the model can.  ``tau_mean`` is population too, but a single
-scalar shared by the three scores, so moving it for MDS1_total alone is a
-teaching liberty.
+That asymmetry is the model's, not a display choice. ``tau`` is an *individual*
+latent variable, drawn once per subject with no feature axis (``tau_mean =
+ModelParameter.for_ind_mean("tau", shape=(1,))``, a single scalar): a subject is
+early or late *as a whole person*, so there is no per-feature tau to drag. Same
+for xi. ``log_g_mean`` and ``log_v0_mean`` in contrast have shape
+``(dimension,)``, one entry per feature, so dragging them changes that one score
+alone -- exactly as the model can.
+
+Features *can* end up offset from one another in time, but through the sources,
+never through tau. In ``model_with_sources`` the space shift enters as
+
+    metric_k * (v0_k * rt + w_k) = metric_k * v0_k * (rt + w_k / v0_k)
+
+so w_k *is* a per-feature time shift of w_k/v0_k years. But ``space_shifts`` are
+built on ``OrthoBasis("v0", "metric_sqr")``, hence orthogonal to metric*v0, which
+pins those shifts to ``sum_k metric_k * v0_k^2 * delta_k = 0``: advancing one
+feature necessarily delays the others. A tau slider moving one curve with the
+other two frozen would draw the one thing the geometry forbids.
 
 The individual log-speed **xi is deliberately not a slider**, for two reasons:
 
@@ -94,7 +106,9 @@ FIT = dict(
     tau_std=9.7451,
     xi_std=0.7576,
 )
-INTERACTIVE_IX = 0  # index in FIT["features"] of the curve the sliders drive
+# Index in FIT["features"] of the curve the per-feature sliders (g, v0) drive.
+# tau is shared by the whole model, so it always drives every curve.
+INTERACTIVE_IX = 0
 # Time window, as passed to `average_trajectory` in the notebook: the plot spans
 # tau_mean + max(tau_std, 4) * [-N_STD_LEFT, +N_STD_RIGHT].
 N_STD_LEFT, N_STD_RIGHT = 2, 8
@@ -248,7 +262,8 @@ def sigmoid(t, tau, xi, *, g, v0):
 
 def build(f, *, sliders=("tau", "g", "v0")):
     """Build the standalone HTML: the average trajectory of every feature of the
-    fit, with the ``INTERACTIVE_IX``-th one wired to the sliders.
+    fit. tau/xi reparametrize time for the whole model, so they move every curve;
+    g and v0 are per-feature, so they move the ``INTERACTIVE_IX``-th one alone.
 
     ``sliders`` picks which of "tau", "xi", "g", "v0" are exposed, in order.
     The default leaves "xi" out on purpose -- see the module docstring: it is
@@ -291,12 +306,18 @@ def build(f, *, sliders=("tau", "g", "v0")):
                   g=snap("g", gs[ix]), v0=snap("v0", v0s[ix]))
 
     # Average trajectory of each feature = the model at the mean individual
-    # parameters (tau = tau_mean, xi = xi_mean = 0, sources = 0). Only the
-    # interactive feature gets a live source; the others never move.
-    avg = [sigmoid(t, t0, 0.0, g=gs[k], v0=v0s[k]) for k in range(len(feats))]
-    live_src = ColumnDataSource(dict(
-        t=t, y=sigmoid(t, fitted["tau"], fitted["xi"],
-                       g=fitted["g"], v0=fitted["v0"])))
+    # parameters (tau = tau_mean, xi = xi_mean = 0, sources = 0). EVERY feature
+    # gets a live source: tau/xi are one scalar for the whole subject, so a drag
+    # on tau has to slide the three curves together. g and v0 carry a feature
+    # axis, so only feature `ix` reads them from the sliders -- the others keep
+    # their fitted (gs[k], v0s[k]).
+    live_srcs = [
+        ColumnDataSource(dict(
+            t=t, y=sigmoid(t, fitted["tau"], fitted["xi"],
+                           g=fitted["g"] if k == ix else gs[k],
+                           v0=fitted["v0"] if k == ix else v0s[k])))
+        for k in range(len(feats))
+    ]
 
     p = figure(
         x_axis_label="Age",
@@ -309,15 +330,15 @@ def build(f, *, sliders=("tau", "g", "v0")):
         tools="", toolbar_location=None,
     )
 
-    # The features, in model order and in leaspy's own colors. The interactive
-    # one is drawn like the others -- it just reads its data from the sliders.
+    # The features, in model order and in leaspy's own colors.
     for k, (name, col) in enumerate(zip(feats, colors)):
-        src = live_src if k == ix else ColumnDataSource(dict(t=t, y=avg[k]))
-        p.line("t", "y", source=src, color=col, line_width=4, legend_label=name)
+        p.line("t", "y", source=live_srcs[k], color=col, line_width=4,
+               legend_label=name)
 
-    # Onset marker + a readout of the two derived quantities the sliders drive.
+    # Onset marker: tau belongs to the subject, not to any one score, so the line
+    # is neutral grey rather than the interactive feature's color.
     onset = Span(location=fitted["tau"], dimension="height",
-                 line_color=colors[ix], line_dash="dotted", line_width=1.5)
+                 line_color="#555555", line_dash="dotted", line_width=1.5)
     p.add_layout(onset)
 
     # α = exp(ξ) is only worth reading out when ξ is one of the sliders --
@@ -364,10 +385,13 @@ def build(f, *, sliders=("tau", "g", "v0")):
                       step=step[key], title=title, width=FRAME_W,
                       margin=smargin, **kw)
 
-    tau_slider = make("tau", "onset  τ   (time-shift)")
-    xi_slider = make("xi", "speed  ξ   (log-acceleration, α = exp ξ)")
-    g_slider = make("g", "baseline  g   (p₀ = 1/(1+g))")
-    v0_slider = make("v0", "velocity  v₀   (slope at the onset)", format="0.0000")
+    # Titles say which *level* each parameter lives at, because that is exactly
+    # what decides whether the slider moves one curve or all three.
+    tau_slider = make("tau", "onset  τ   (individual — time-shift, all features)")
+    xi_slider = make("xi", "speed  ξ   (individual — log-acceleration, α = exp ξ)")
+    g_slider = make("g", f"baseline  g   (population — p₀ = 1/(1+g), {feats[ix]})")
+    v0_slider = make("v0", f"velocity  v₀   (population — slope at the onset, "
+                           f"{feats[ix]})", format="0.0000")
 
     def magnet(slider, points, tol):
         """Snap the slider to any of `points` when dragged within `tol` of it."""
@@ -402,19 +426,25 @@ def build(f, *, sliders=("tau", "g", "v0")):
     magnet_dots(g_slider, g_magnets, "g")
     magnet_dots(v0_slider, [fitted["v0"]], "v0")
 
-    # One callback redraws the interactive feature. τ/ξ reparametrize its time,
-    # g/v0 reshape it; the other features are static data, so they never move.
+    # One callback redraws every feature. τ/ξ reparametrize the time axis shared
+    # by all of them; g/v0 reshape feature `ix` only, the others keeping the
+    # fitted GS[k]/V0S[k] -- which is precisely the model's own asymmetry.
     callback = CustomJS(
-        args=dict(src=live_src, onset=onset, readout=readout, mid_line=mid_line,
+        args=dict(srcs=live_srcs, ix=ix, GS=list(gs), V0S=list(v0s),
+                  onset=onset, readout=readout, mid_line=mid_line,
                   mid_div=mid_div, tau=tau_slider, xi=xi_slider, g=g_slider,
                   v0=v0_slider, show_alpha=show_alpha),
         code="""
-        const G = g.value, V0 = v0.value, metric = Math.pow(G + 1, 2) / G;
-        const A = Math.exp(xi.value), TAU = tau.value;
-        const t = src.data['t'], y = src.data['y'];
-        for (let i = 0; i < t.length; i++)
-            y[i] = 1 / (1 + G * Math.exp(-metric * V0 * A * (t[i] - TAU)));
-        src.change.emit();
+        const G = g.value, A = Math.exp(xi.value), TAU = tau.value;
+        for (let k = 0; k < srcs.length; k++) {
+            const Gk = (k === ix) ? G : GS[k];
+            const Vk = (k === ix) ? v0.value : V0S[k];
+            const metric = Math.pow(Gk + 1, 2) / Gk;
+            const t = srcs[k].data['t'], y = srcs[k].data['y'];
+            for (let i = 0; i < t.length; i++)
+                y[i] = 1 / (1 + Gk * Math.exp(-metric * Vk * A * (t[i] - TAU)));
+            srcs[k].change.emit();
+        }
         onset.location = TAU;
         readout.text = (show_alpha ? "α = exp(ξ) = " + A.toFixed(2) + "      " : "")
                      + "p₀ = 1/(1+g) = " + (1 / (1 + G)).toFixed(3);

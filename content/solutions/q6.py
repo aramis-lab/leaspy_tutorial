@@ -5,5 +5,3 @@ simulated = model.simulate(
     visit_parameters=visit_parameters,
     seed=SEED,
 )
-
-df_sim = simulated.data.to_dataframe().set_index(["ID", "TIME"])

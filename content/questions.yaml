@@ -81,3 +81,39 @@
     scalar one fits a single shared value (1 parameter). Fewer parameters means a
     lighter BIC/AIC penalty, which is why the scalar model can win even if it
     reconstructs the data slightly less well.
+
+7:
+  prompt: "What does Leaspy need before it can simulate a new cohort?"
+  options:
+    - "A fitted (initialized) logistic model"
+    - "Only a list of feature names"
+    - "One personalized patient"
+    - "Only a dataset with the features to simulate"
+  answer: 0
+  feedback: >
+    Simulation samples new individual parameters from the population
+    distributions learned during fit, so the model must already be initialized and fitted.
+    It does not need any real patient data for the simulation step.
+
+8:
+  prompt: "TIME is expressed in years. Which mean visit spacing gives approximately two visits per year?"
+  options:
+    - "2"
+    - "1"
+    - "0.5"
+  answer: 2
+  feedback: >
+    Two visits per year means one visit every half year, so
+    distance_visit_mean should be 0.5.
+
+9:
+  prompt: "Which result best supports good recovery of the simulated individual parameters?"
+  options:
+    - "Points close to the identity line, with ICC and Pearson r close to 1"
+    - "Points forming a horizontal line, with ICC close to 0"
+    - "A large difference between the generating and refitted parameters"
+  answer: 0
+  feedback: >
+    Good recovery means that the re-estimated value is close to the known value
+    used for simulation. The points then follow the identity line and agreement
+    metrics approach 1.

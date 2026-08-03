@@ -1,0 +1,99 @@
+{
+  "leaspy_version": "2.1.0",
+  "name": "logistic",
+  "features": [
+    "MDS1_total",
+    "SCOPA_total",
+    "MOCA_total"
+  ],
+  "dimension": 3,
+  "hyperparameters": {
+    "betas_std": 0.009999999776482582,
+    "log_g_std": 0.009999999776482582,
+    "log_v0_std": 0.009999999776482582,
+    "sources_mean": [
+      0.0,
+      0.0
+    ],
+    "sources_std": 1.0,
+    "xi_mean": 0.0
+  },
+  "parameters": {
+    "betas_mean": [
+      [
+        0.0491596944630146,
+        0.034801505506038666
+      ],
+      [
+        -0.04622115194797516,
+        0.025538370013237
+      ]
+    ],
+    "log_g_mean": [
+      1.9107537269592285,
+      1.4148602485656738,
+      2.2762584686279297
+    ],
+    "log_v0_mean": [
+      -4.936074256896973,
+      -4.644237995147705,
+      -5.2808074951171875
+    ],
+    "noise_std": [
+      0.05163463205099106,
+      0.06941935420036316,
+      0.05434950441122055
+    ],
+    "tau_mean": [
+      66.05216979980469
+    ],
+    "tau_std": [
+      9.74514102935791
+    ],
+    "xi_std": [
+      0.7575583457946777
+    ],
+    "mixing_matrix": [
+      [
+        0.013974015600979328,
+        0.05263795703649521,
+        -0.039837706834077835
+      ],
+      [
+        -0.03199760988354683,
+        0.026837002485990524,
+        0.010921599343419075
+      ]
+    ]
+  },
+  "dataset_info": {
+    "n_subjects": 160,
+    "n_scores": 3,
+    "n_visits": 1590,
+    "n_observations": 4770,
+    "visits_per_subject": {
+      "median": 10.0,
+      "min": 3,
+      "max": 18,
+      "iqr": 2.0
+    }
+  },
+  "training_info": {
+    "algorithm": "mcmc_saem",
+    "seed": 0,
+    "n_iter": 1000,
+    "n_burn_in_iter": 900,
+    "converged": null,
+    "duration": "18.861s"
+  },
+  "obs_models": {
+    "y": "gaussian-diagonal"
+  },
+  "fit_metrics": {
+    "nll_attach": -6815.7763671875,
+    "nll_regul_ind_sum": 1236.1578369140625,
+    "nll_regul_pop_sum": -24.438074111938477,
+    "nll_tot": -5604.05615234375
+  },
+  "source_dimension": 2
+}

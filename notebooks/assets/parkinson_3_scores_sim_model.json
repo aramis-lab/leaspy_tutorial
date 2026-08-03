@@ -1,0 +1,99 @@
+{
+  "leaspy_version": "2.1.0",
+  "name": "logistic",
+  "features": [
+    "MDS1_total",
+    "SCOPA_total",
+    "MOCA_total"
+  ],
+  "dimension": 3,
+  "hyperparameters": {
+    "betas_std": 0.009999999776482582,
+    "log_g_std": 0.009999999776482582,
+    "log_v0_std": 0.009999999776482582,
+    "sources_mean": [
+      0.0,
+      0.0
+    ],
+    "sources_std": 1.0,
+    "xi_mean": 0.0
+  },
+  "parameters": {
+    "betas_mean": [
+      [
+        -0.05454476550221443,
+        0.03355105593800545
+      ],
+      [
+        0.050961509346961975,
+        0.02811308205127716
+      ]
+    ],
+    "log_g_mean": [
+      1.8712612390518188,
+      1.3632457256317139,
+      2.3613386154174805
+    ],
+    "log_v0_mean": [
+      -5.148200035095215,
+      -4.816326141357422,
+      -5.599381446838379
+    ],
+    "noise_std": [
+      0.053531575947999954,
+      0.06771277636289597,
+      0.0544511117041111
+    ],
+    "tau_mean": [
+      64.30348205566406
+    ],
+    "tau_std": [
+      8.571306228637695
+    ],
+    "xi_std": [
+      1.1334805488586426
+    ],
+    "mixing_matrix": [
+      [
+        -0.017037728801369667,
+        -0.05879094824194908,
+        0.04272642359137535
+      ],
+      [
+        -0.033880364149808884,
+        0.02510731853544712,
+        0.011737207882106304
+      ]
+    ]
+  },
+  "dataset_info": {
+    "n_subjects": 150,
+    "n_scores": 3,
+    "n_visits": 4220,
+    "n_observations": 12660,
+    "visits_per_subject": {
+      "median": 28.0,
+      "min": 22,
+      "max": 34,
+      "iqr": 3.0
+    }
+  },
+  "training_info": {
+    "algorithm": "mcmc_saem",
+    "seed": 0,
+    "n_iter": 10000,
+    "n_burn_in_iter": 9000,
+    "converged": null,
+    "duration": "296.233s"
+  },
+  "obs_models": {
+    "y": "gaussian-diagonal"
+  },
+  "fit_metrics": {
+    "nll_attach": -18034.609375,
+    "nll_regul_ind_sum": 1179.738525390625,
+    "nll_regul_pop_sum": -19.095224380493164,
+    "nll_tot": -16873.962890625
+  },
+  "source_dimension": 2
+}

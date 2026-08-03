@@ -117,3 +117,38 @@
     Good recovery means that the re-estimated value is close to the known value
     used for simulation. The points then follow the identity line and agreement
     metrics approach 1.
+
+10:
+  prompt: "In joint-model data, what does `EVENT_BOOL = 0` mean?"
+  options:
+    - "The subject can never experience the event"
+    - "No event was observed before the subject's censoring time"
+    - "The event occurred at the first visit"
+  answer: 1
+  feedback: >
+    Zero denotes right censoring: the subject is known to be event-free only up
+    to EVENT_TIME. What happens after that time is unknown.
+
+11:
+  prompt: "A subject has nine longitudinal visits. How should their event information appear in the joint dataframe?"
+  options:
+    - "With one EVENT_TIME and EVENT_BOOL value, repeated identically on all nine rows"
+    - "Only on the final visit row, with missing values on the other rows"
+    - "With a different EVENT_TIME at every visit"
+  answer: 0
+  feedback: >
+    The event outcome is subject-level even though the dataframe is visit-level.
+    Leaspy checks that EVENT_TIME and EVENT_BOOL each have one unique value per
+    subject, then extracts that event information once.
+
+12:
+  prompt: "If the Weibull shape parameter rho is greater than 1, what does that indicate?"
+  options:
+    - "The baseline event hazard increases as latent disease age advances"
+    - "The baseline event hazard is constant"
+    - "All subjects will experience the event at the same age"
+  answer: 0
+  feedback: >
+    For a Weibull survival model, rho greater than 1 corresponds to an increasing
+    baseline hazard. Rho equal to 1 gives a constant hazard, while rho below 1
+    gives a decreasing hazard.

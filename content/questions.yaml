@@ -35,6 +35,7 @@
 3:
   prompt: "Do you think it has converged? If not, what would you try at first?"
   options:
+    - "The model has converged"
     - "Revisit the data and verify monotonicity/normalization"
     - "Try a different model (e.g. linear)"
     - "Add more iterations"

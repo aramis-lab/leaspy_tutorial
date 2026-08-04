@@ -12,6 +12,7 @@ Python:
 
     content/questions.yaml         multiple-choice questions, keyed by id
     content/solutions/q<id>.py     one solution snippet per fill-in exercise
+    content/reference_run/         the shipped converged fit, read by the notebooks
 """
 from __future__ import annotations
 

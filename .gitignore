@@ -3,3 +3,6 @@ __pycache__/
 .ipynb_checkpoints/
 .DS_Store
 /notebooks/*solution*.ipynb
+
+# a fit writes its logs here; the shipped reference run lives in content/reference_run/
+_outputs/

@@ -17,5 +17,4 @@ ax.set_ylim(0, 1)
 ax.legend()
 
 plt.tight_layout()
-plt.savefig('figures/spaghetti_plot_parkinson.pdf', dpi=800)
 plt.show()

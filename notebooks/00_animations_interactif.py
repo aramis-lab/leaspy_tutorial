@@ -12,11 +12,12 @@ kernel recomputing anything.
 
 notebooks/assets/sigmoid_interactive.html
 -----------------------------------------
-The **average trajectories** of the three Parkinson scores of the fit run in
-``notebooks/fit.ipynb`` (``LogisticModel(source_dimension=2)`` on MDS1_total /
-SCOPA_total / MOCA_total) -- the same curves as the notebook's
+The **average trajectories** of the three Parkinson scores of the canonical
+converged fit shipped with the tutorial (``LogisticModel(source_dimension=2)``,
+100 000 iterations, on MDS1_total / SCOPA_total / MOCA_total) -- the same curves
+as the notebook's
 
-    Plotting(model_2_sources).average_trajectory(alpha=1, n_std_left=2, n_std_right=8)
+    Plotting(model_100k).average_trajectory(alpha=1, n_std_left=2, n_std_right=8)
 
 same time window, same tab10 colors leaspy's ``Plotting`` gives the features.
 No visits are drawn: these are population curves, not patients.
@@ -91,22 +92,17 @@ from bokeh.resources import CDN
 
 N = 400  # points along the time axis for the drawn curves
 
-# --- The fit the sigmoid figure draws: notebooks/fit.ipynb -------------------
-# Population parameters of `model_2_sources` as printed by its `summary()`
-# (LogisticModel, source_dimension=2, seed=0, 1000 iterations, trained on
-# df_train = subjects up to GS-160). MCMC-SAEM only replays exactly on an
-# identical stack -- refitting here lands ~0.5 yr away on tau_mean -- so we ship
-# the notebook's own numbers. Pass a `model.save(...)` JSON to rebuild from
-# another fit.
-FIT = dict(
-    features=["MDS1_total", "SCOPA_total", "MOCA_total"],
-    log_g_mean=[1.9108, 1.4149, 2.2763],
-    log_v0_mean=[-4.9361, -4.6442, -5.2808],
-    tau_mean=66.0522,
-    tau_std=9.7451,
-    xi_std=0.7576,
+# --- The fit the sigmoid figure draws ----------------------------------------
+# The canonical converged run (100 000 iterations, seed 0) shipped in
+# content/reference_run/ -- the same model notebooks/fit.ipynb loads. We read its
+# saved parameters rather than hardcoding them here, so the figure and the
+# notebook can never drift apart. Pass another `model.save(...)` JSON on the CLI
+# to rebuild from a different fit.
+CANONICAL_MODEL = (
+    Path(__file__).resolve().parent.parent
+    / "content" / "reference_run" / "parkinson_fit_V21.json"
 )
-# Index in FIT["features"] of the curve the per-feature sliders (g, v0) drive.
+# Index in the model's features of the curve the per-feature sliders (g, v0) drive.
 # tau is shared by the whole model, so it always drives every curve.
 INTERACTIVE_IX = 0
 # Time window, as passed to `average_trajectory` in the notebook: the plot spans
@@ -143,25 +139,24 @@ def palette(n):
 def fit_facts(model_json=None):
     """Population parameters of the fit -> everything the sigmoid figure draws.
 
-    Defaults to the numbers recorded in ``notebooks/fit.ipynb`` (see `FIT`);
-    pass the path of a model saved with ``model.save(...)`` to use that fit
-    instead. Returns g and v0 per feature on their interpretable scale
-    (g = 1/p0 - 1 = exp(log_g), v0 = exp(log_v0)).
+    Defaults to the canonical converged model shipped in ``content/reference_run/``
+    (see `CANONICAL_MODEL`); pass the path of another model saved with
+    ``model.save(...)`` to use that fit instead. Returns g and v0 per feature on
+    their interpretable scale (g = 1/p0 - 1 = exp(log_g), v0 = exp(log_v0)).
     """
-    p = dict(FIT)
-    if model_json is not None:
-        import json
+    import json
 
-        saved = json.loads(Path(model_json).read_text(encoding="utf-8"))
-        sp = saved["parameters"]
-        p = dict(
-            features=list(saved["features"]),
-            log_g_mean=list(sp["log_g_mean"]),
-            log_v0_mean=list(sp["log_v0_mean"]),
-            tau_mean=float(sp["tau_mean"][0]),
-            tau_std=float(sp["tau_std"][0]),
-            xi_std=float(sp["xi_std"][0]),
-        )
+    path = Path(model_json) if model_json is not None else CANONICAL_MODEL
+    saved = json.loads(path.read_text(encoding="utf-8"))
+    sp = saved["parameters"]
+    p = dict(
+        features=list(saved["features"]),
+        log_g_mean=list(sp["log_g_mean"]),
+        log_v0_mean=list(sp["log_v0_mean"]),
+        tau_mean=float(sp["tau_mean"][0]),
+        tau_std=float(sp["tau_std"][0]),
+        xi_std=float(sp["xi_std"][0]),
+    )
 
     return dict(
         features=p["features"],
@@ -171,7 +166,7 @@ def fit_facts(model_json=None):
         tau_mean=p["tau_mean"],
         tau_std=p["tau_std"],
         xi_std=p["xi_std"],
-        source=("model json" if model_json else "fit.ipynb"),
+        source=path.name,
     )
 
 
@@ -715,7 +710,7 @@ def main(model_json=None, *, sigmoid=True, morph=True):
     assets = Path(__file__).resolve().parent / "assets"
     assets.mkdir(parents=True, exist_ok=True)
 
-    # Average trajectories of the notebook's fit -- needs no leaspy, just `FIT`
+    # Average trajectories of the canonical fit -- needs no leaspy, just the model JSON
     # (or the population parameters of the model JSON passed on the CLI).
     if sigmoid:
         facts = fit_facts(model_json)

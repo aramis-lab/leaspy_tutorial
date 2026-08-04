@@ -2,3 +2,6 @@ __pycache__/
 *.pyc
 .ipynb_checkpoints/
 .DS_Store
+
+# a fit writes its logs here; the shipped reference run lives in content/reference_run/
+_outputs/

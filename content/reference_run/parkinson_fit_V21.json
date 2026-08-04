@@ -1,0 +1,99 @@
+{
+  "leaspy_version": "2.1.0",
+  "name": "logistic",
+  "features": [
+    "MDS1_total",
+    "SCOPA_total",
+    "MOCA_total"
+  ],
+  "dimension": 3,
+  "hyperparameters": {
+    "betas_std": 0.009999999776482582,
+    "log_g_std": 0.009999999776482582,
+    "log_v0_std": 0.009999999776482582,
+    "sources_mean": [
+      0.0,
+      0.0
+    ],
+    "sources_std": 1.0,
+    "xi_mean": 0.0
+  },
+  "parameters": {
+    "betas_mean": [
+      [
+        0.05113305151462555,
+        0.0038062625098973513
+      ],
+      [
+        -0.02324628457427025,
+        0.040174975991249084
+      ]
+    ],
+    "log_g_mean": [
+      2.1357462406158447,
+      1.667250156402588,
+      2.4747440814971924
+    ],
+    "log_v0_mean": [
+      -5.173208236694336,
+      -4.784376621246338,
+      -5.469325542449951
+    ],
+    "noise_std": [
+      0.05192297697067261,
+      0.06937935948371887,
+      0.05438551679253578
+    ],
+    "tau_mean": [
+      62.19385528564453
+    ],
+    "tau_std": [
+      9.649737358093262
+    ],
+    "xi_std": [
+      0.7667521834373474
+    ],
+    "mixing_matrix": [
+      [
+        -0.004264958202838898,
+        0.05000627413392067,
+        -0.02522224187850952
+      ],
+      [
+        -0.03054807521402836,
+        -0.004264370538294315,
+        0.026022039353847504
+      ]
+    ]
+  },
+  "dataset_info": {
+    "n_subjects": 160,
+    "n_scores": 3,
+    "n_visits": 1590,
+    "n_observations": 4770,
+    "visits_per_subject": {
+      "median": 10.0,
+      "min": 3,
+      "max": 18,
+      "iqr": 2.0
+    }
+  },
+  "training_info": {
+    "algorithm": "mcmc_saem",
+    "seed": 0,
+    "n_iter": 100000,
+    "n_burn_in_iter": 90000,
+    "converged": null,
+    "duration": "1216.970s"
+  },
+  "obs_models": {
+    "y": "gaussian-diagonal"
+  },
+  "fit_metrics": {
+    "nll_attach": -6806.78515625,
+    "nll_regul_ind_sum": 1229.41064453125,
+    "nll_regul_pop_sum": -15.15674114227295,
+    "nll_tot": -5592.53369140625
+  },
+  "source_dimension": 2
+}

@@ -92,7 +92,7 @@
     - "GS-001 progresses slower than average"
   answer: 1
   feedback: >
-    Tau is a time-shift: a higher tau than tau_mean means this subject starts 
+    tau is a time-shift: a higher tau than tau_mean means this subject starts 
     deteriorating later than average — a delayed onset.
 
 8:

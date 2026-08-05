@@ -95,6 +95,7 @@
     Simulation samples new individual parameters from the population
     distributions learned during fit, so the model must already be initialized and fitted.
     It does not need any real patient data for the simulation step.
+    For now, only the logistic model is supported for simulation, but more will be added in the near future.
 
 8:
   prompt: "TIME is expressed in years. Which mean visit spacing gives approximately two visits per year?"

@@ -107,3 +107,15 @@
     xi controls speed: a value above 0 means this subject deteriorates faster 
     than average once symptoms start. Timing of onset is captured separately, 
     by tau.
+
+
+#### QUESTION FOR MAYLIS (end of personalization part) ##### 
+# I added "tp.runquestion(8)" in my code but it doesn't work now, as the question isn't written here. 
+# 9:
+  # prompt: " Reorder the whole prediction and evaluation workflow in the correct sequence": 
+  # 1) Fit the Leaspy model on the training set to compute the population parameters.
+  # 2) Personalize unseen test patients using their incomplete trajectories (all visits except the last one to get the prediction metrics) to compute their individual parameters.
+  # 3) Estimate the outcomes at each patient's last visit using the previously computed individual parameters.
+  # 4) Compare predictions with the held-out ground truth and compute prediction metrics ($\text{MAE}, R^{2}$)
+
+# This is the right order here. I would like to shuffle it and that the user has to reorder it in the right sequence by drag and dropping each sentence. 

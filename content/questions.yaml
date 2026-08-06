@@ -109,18 +109,6 @@
     distance_visit_mean should be 0.5.
 
 9:
-  prompt: "Which result best supports good recovery of the simulated individual parameters?"
-  options:
-    - "Points close to the identity line, with ICC and Pearson r close to 1"
-    - "Points forming a horizontal line, with ICC close to 0"
-    - "A large difference between the generating and refitted parameters"
-  answer: 0
-  feedback: >
-    Good recovery means that the re-estimated value is close to the known value
-    used for simulation. The points then follow the identity line and agreement
-    metrics approach 1.
-
-10:
   prompt: "In joint-model data, what does `EVENT_BOOL = 0` mean?"
   options:
     - "The subject can never experience the event"
@@ -131,7 +119,7 @@
     Zero denotes right censoring: the subject is known to be event-free only up
     to EVENT_TIME. What happens after that time is unknown.
 
-11:
+10:
   prompt: "A subject has nine longitudinal visits. How should their event information appear in the joint dataframe?"
   options:
     - "With one EVENT_TIME and EVENT_BOOL value, repeated identically on all nine rows"
@@ -143,7 +131,7 @@
     Leaspy checks that EVENT_TIME and EVENT_BOOL each have one unique value per
     subject, then extracts that event information once.
 
-12:
+11:
   prompt: "If the Weibull shape parameter rho is greater than 1, what does that indicate?"
   options:
     - "The baseline event hazard increases as latent disease age advances"

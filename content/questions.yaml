@@ -9,43 +9,6 @@
 # To add a question, just copy a block and bump the id. No Python needed.
 
 1:
-  prompt: "In a longitudinal dataset, what does a single *row* usually represent?"
-  options:
-    - "One patient"
-    - "One visit of one patient (a patient x time observation)"
-    - "One clinical variable"
-  answer: 1
-  feedback: >
-    Each row is one visit: the same patient appears on several rows, one per
-    follow-up time. That repeated-measures structure is exactly what
-    disease-progression models exploit.
-
-2:
-  prompt: "What does the tau (time-shift) individual parameter capture in a Leaspy model?"
-  options:
-    - "How fast the subject progresses"
-    - "When the subject reaches the population's average disease stage"
-    - "The measurement noise for that subject"
-  answer: 1
-  feedback: >
-    Tau is the time-shift, a disease-onset offset: it says *when* a subject
-    reaches the average stage. The *speed* of progression is the separate
-    parameter xi.
-
-3:
-  prompt: "Do you think it has converged? If not, what would you try at first?"
-  options:
-    - "The model has converged"
-    - "Revisit the data and verify monotonicity/normalization"
-    - "Try a different model (e.g. linear)"
-    - "Add more iterations"
-  answer: 3
-  feedback: >
-    It has not converged: the chains are still drifting, they have not reached a
-    plateau. Nothing is wrong with the data or the model here, the fit was simply
-    stopped too early, after only 1 000 iterations.
-
-4:
   prompt: "We fit three scores. Which value of `source_dimension` is NOT possible?"
   options:
     - "0"
@@ -58,7 +21,20 @@
     subjects deviate from the mean trajectory, and there are at most
     (features - 1) of them.
 
-5:
+2:
+  prompt: "Do you think it has converged? If not, what would you try at first?"
+  options:
+    - "The model has converged"
+    - "Revisit the data and verify monotonicity/normalization"
+    - "Try a different model (e.g. linear)"
+    - "Add more iterations"
+  answer: 3
+  feedback: >
+    It has not converged: the chains are still drifting, they have not reached a
+    plateau. Nothing is wrong with the data or the model here, the fit was simply
+    stopped too early, after only 1 000 iterations.
+
+3:
   prompt: "Both models give a negative BIC. Which one fits better?"
   options:
     - "The one with the BIC closest to zero"
@@ -70,7 +46,7 @@
     add a penalty for the number of parameters, so they let you ask whether extra
     sources are actually worth their cost.
 
-6:
+4:
   prompt: "On 3 scores, switching from `gaussian-diagonal` to `gaussian-scalar` changes the number of model parameters by:"
   options:
     - "-2"
@@ -82,3 +58,27 @@
     scalar one fits a single shared value (1 parameter). Fewer parameters means a
     lighter BIC/AIC penalty, which is why the scalar model can win even if it
     reconstructs the data slightly less well.
+
+5:
+  prompt: "In a longitudinal dataset, what does a single *row* usually represent?"
+  options:
+    - "One patient"
+    - "One visit of one patient (a patient x time observation)"
+    - "One clinical variable"
+  answer: 1
+  feedback: >
+    Each row is one visit: the same patient appears on several rows, one per
+    follow-up time. That repeated-measures structure is exactly what
+    disease-progression models exploit.
+
+6:
+  prompt: "What does the tau (time-shift) individual parameter capture in a Leaspy model?"
+  options:
+    - "How fast the subject progresses"
+    - "When the subject reaches the population's average disease stage"
+    - "The measurement noise for that subject"
+  answer: 1
+  feedback: >
+    Tau is the time-shift, a disease-onset offset: it says *when* a subject
+    reaches the average stage. The *speed* of progression is the separate
+    parameter xi.

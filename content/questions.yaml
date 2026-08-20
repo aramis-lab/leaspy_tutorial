@@ -7,45 +7,19 @@
 #   feedback : shown when the user picks a wrong answer (keep it short, 1-3 lines)
 #
 # To add a question, just copy a block and bump the id. No Python needed.
+#
+# Ids 1-12 follow the order in which the questions appear in notebooks/fit.ipynb:
+#   1-2    Fit and convergence
+#   3-4    Model comparison
+#   5-7    Personalization and prediction
+#   8-9    Simulation
+#   10-12  Extension: joint model
+# If you insert a question in the middle of that notebook, renumber the ones
+# after it so the sequence keeps matching the reading order.
+# Ids 13-14 are the two demo questions used by notebooks/00_template.ipynb; keep
+# them last and bump them if fit.ipynb ever grows past 12 questions.
 
 1:
-  prompt: "In a longitudinal dataset, what does a single *row* usually represent?"
-  options:
-    - "One patient"
-    - "One visit of one patient (a patient x time observation)"
-    - "One clinical variable"
-  answer: 1
-  feedback: >
-    Each row is one visit: the same patient appears on several rows, one per
-    follow-up time. That repeated-measures structure is exactly what
-    disease-progression models exploit.
-
-2:
-  prompt: "What does the tau (time-shift) individual parameter capture in a Leaspy model?"
-  options:
-    - "How fast the subject progresses"
-    - "When the subject reaches the population's average disease stage"
-    - "The measurement noise for that subject"
-  answer: 1
-  feedback: >
-    Tau is the time-shift, a disease-onset offset: it says *when* a subject
-    reaches the average stage. The *speed* of progression is the separate
-    parameter xi.
-
-3:
-  prompt: "Do you think it has converged? If not, what would you try at first?"
-  options:
-    - "The model has converged"
-    - "Revisit the data and verify monotonicity/normalization"
-    - "Try a different model (e.g. linear)"
-    - "Add more iterations"
-  answer: 3
-  feedback: >
-    It has not converged: the chains are still drifting, they have not reached a
-    plateau. Nothing is wrong with the data or the model here, the fit was simply
-    stopped too early, after only 1 000 iterations.
-
-4:
   prompt: "We fit three scores. Which value of `source_dimension` is NOT possible?"
   options:
     - "0"
@@ -58,7 +32,20 @@
     subjects deviate from the mean trajectory, and there are at most
     (features - 1) of them.
 
-5:
+2:
+  prompt: "Do you think it has converged? If not, what would you try at first?"
+  options:
+    - "The model has converged"
+    - "Revisit the data and verify monotonicity/normalization"
+    - "Try a different model (e.g. linear)"
+    - "Add more iterations"
+  answer: 3
+  feedback: >
+    It has not converged: the chains are still drifting, they have not reached a
+    plateau. Nothing is wrong with the data or the model here, the fit was simply
+    stopped too early, after only 1 000 iterations.
+
+3:
   prompt: "Both models give a negative BIC. Which one fits better?"
   options:
     - "The one with the BIC closest to zero"
@@ -70,7 +57,7 @@
     add a penalty for the number of parameters, so they let you ask whether extra
     sources are actually worth their cost.
 
-6:
+4:
   prompt: "On 3 scores, switching from `gaussian-diagonal` to `gaussian-scalar` changes the number of model parameters by:"
   options:
     - "-2"
@@ -83,7 +70,52 @@
     lighter BIC/AIC penalty, which is why the scalar model can win even if it
     reconstructs the data slightly less well.
 
+5:
+  prompt: "GS-001 has tau = 68.58, while tau_mean = 62.19 for the population. What does this imply?"
+  options:
+    - "GS-001 starts deteriorating earlier than average"
+    - "GS-001 starts deteriorating later than average"
+    - "GS-001 progresses faster than average"
+    - "GS-001 progresses slower than average"
+  answer: 1
+  feedback: >
+    tau is a time-shift: a higher tau than tau_mean means this subject starts
+    deteriorating later than average — a delayed onset.
+
+6:
+  prompt: "GS-001 has xi = 1.45 > 0. What does this imply?"
+  options:
+    - "GS-001 starts deteriorating earlier than average"
+    - "GS-001 starts deteriorating later than average"
+    - "GS-001 progresses faster than average"
+    - "GS-001 progresses slower than average"
+  answer: 2
+  feedback: >
+    xi controls speed: a value above 0 means this subject deteriorates faster
+    than average once symptoms start. Timing of onset is captured separately,
+    by tau.
+
+# NOTE: question 7 is the reorder-the-workflow exercise at the end of the
+# personalization part. tutolib only knows how to render radio buttons, so it is
+# written here as a choice between four candidate orderings. A drag-and-drop
+# version, where the user reorders the four sentences themselves, would be nicer
+# but needs a new widget in tutolib.
 7:
+  prompt: "Put the whole prediction and evaluation workflow back in the correct sequence:"
+  options:
+    - "Fit on the train set → estimate the held-out visit → personalize the test patients → compare with the ground truth (MAE, R²)"
+    - "Personalize the test patients → fit on the train set → estimate the held-out visit → compare with the ground truth (MAE, R²)"
+    - "Fit on the train set → personalize the test patients → estimate the held-out visit → compare with the ground truth (MAE, R²)"
+    - "Fit on the train set → personalize the test patients → compare with the ground truth (MAE, R²) → estimate the held-out visit"
+  answer: 2
+  feedback: >
+    Fit comes first: it estimates the population parameters on the train set.
+    Only then can personalize infer each test patient's individual parameters,
+    from all their visits but the last. estimate evaluates that individual
+    trajectory at the held-out visit time, and comparing with the ground truth
+    can only happen once that prediction exists.
+
+8:
   prompt: "What does Leaspy need before it can simulate a new cohort?"
   options:
     - "A fitted (initialized) logistic model"
@@ -97,7 +129,7 @@
     It does not need any real patient data for the simulation step.
     For now, only the logistic model is supported for simulation, but more will be added in the near future.
 
-8:
+9:
   prompt: "TIME is expressed in years. Which mean visit spacing gives approximately two visits per year?"
   options:
     - "2"
@@ -108,7 +140,7 @@
     Two visits per year means one visit every half year, so
     distance_visit_mean should be 0.5.
 
-9:
+10:
   prompt: "In joint-model data, what does `EVENT_BOOL = 0` mean?"
   options:
     - "The subject can never experience the event"
@@ -119,7 +151,7 @@
     Zero denotes right censoring: the subject is known to be event-free only up
     to EVENT_TIME. What happens after that time is unknown.
 
-10:
+11:
   prompt: "A subject has nine longitudinal visits. How should their event information appear in the joint dataframe?"
   options:
     - "With one EVENT_TIME and EVENT_BOOL value, repeated identically on all nine rows"
@@ -131,7 +163,7 @@
     Leaspy checks that EVENT_TIME and EVENT_BOOL each have one unique value per
     subject, then extracts that event information once.
 
-11:
+12:
   prompt: "If the Weibull shape parameter rho is greater than 1, what does that indicate?"
   options:
     - "The baseline event hazard increases as latent disease age advances"
@@ -142,3 +174,29 @@
     For a Weibull survival model, rho greater than 1 corresponds to an increasing
     baseline hazard. Rho equal to 1 gives a constant hazard, while rho below 1
     gives a decreasing hazard.
+
+# --- demo questions for notebooks/00_template.ipynb -----------------------------
+
+13:
+  prompt: "In a longitudinal dataset, what does a single *row* usually represent?"
+  options:
+    - "One patient"
+    - "One visit of one patient (a patient x time observation)"
+    - "One clinical variable"
+  answer: 1
+  feedback: >
+    Each row is one visit: the same patient appears on several rows, one per
+    follow-up time. That repeated-measures structure is exactly what
+    disease-progression models exploit.
+
+14:
+  prompt: "What does the tau (time-shift) individual parameter capture in a Leaspy model?"
+  options:
+    - "How fast the subject progresses"
+    - "When the subject reaches the population's average disease stage"
+    - "The measurement noise for that subject"
+  answer: 1
+  feedback: >
+    Tau is the time-shift, a disease-onset offset: it says *when* a subject
+    reaches the average stage. The *speed* of progression is the separate
+    parameter xi.

@@ -8,11 +8,16 @@
 #
 # To add a question, just copy a block and bump the id. No Python needed.
 #
-# Ids 1-7 follow the order in which the questions appear in notebooks/fit.ipynb.
+# Ids 1-12 follow the order in which the questions appear in notebooks/fit.ipynb:
+#   1-2    Fit and convergence
+#   3-4    Model comparison
+#   5-7    Personalization and prediction
+#   8-9    Simulation
+#   10-12  Extension: joint model
 # If you insert a question in the middle of that notebook, renumber the ones
 # after it so the sequence keeps matching the reading order.
-# Ids 8-9 are the two demo questions used by notebooks/00_template.ipynb; keep
-# them last and bump them if fit.ipynb ever grows past 7 questions.
+# Ids 13-14 are the two demo questions used by notebooks/00_template.ipynb; keep
+# them last and bump them if fit.ipynb ever grows past 12 questions.
 
 1:
   prompt: "We fit three scores. Which value of `source_dimension` is NOT possible?"
@@ -110,9 +115,69 @@
     trajectory at the held-out visit time, and comparing with the ground truth
     can only happen once that prediction exists.
 
-# --- demo questions for notebooks/00_template.ipynb ---------------------------
-
 8:
+  prompt: "What does Leaspy need before it can simulate a new cohort?"
+  options:
+    - "A fitted (initialized) logistic model"
+    - "Only a list of feature names"
+    - "One personalized patient"
+    - "Only a dataset with the features to simulate"
+  answer: 0
+  feedback: >
+    Simulation samples new individual parameters from the population
+    distributions learned during fit, so the model must already be initialized and fitted.
+    It does not need any real patient data for the simulation step.
+    For now, only the logistic model is supported for simulation, but more will be added in the near future.
+
+9:
+  prompt: "TIME is expressed in years. Which mean visit spacing gives approximately two visits per year?"
+  options:
+    - "2"
+    - "1"
+    - "0.5"
+  answer: 2
+  feedback: >
+    Two visits per year means one visit every half year, so
+    distance_visit_mean should be 0.5.
+
+10:
+  prompt: "In joint-model data, what does `EVENT_BOOL = 0` mean?"
+  options:
+    - "The subject can never experience the event"
+    - "No event was observed before the subject's censoring time"
+    - "The event occurred at the first visit"
+  answer: 1
+  feedback: >
+    Zero denotes right censoring: the subject is known to be event-free only up
+    to EVENT_TIME. What happens after that time is unknown.
+
+11:
+  prompt: "A subject has nine longitudinal visits. How should their event information appear in the joint dataframe?"
+  options:
+    - "With one EVENT_TIME and EVENT_BOOL value, repeated identically on all nine rows"
+    - "Only on the final visit row, with missing values on the other rows"
+    - "With a different EVENT_TIME at every visit"
+  answer: 0
+  feedback: >
+    The event outcome is subject-level even though the dataframe is visit-level.
+    Leaspy checks that EVENT_TIME and EVENT_BOOL each have one unique value per
+    subject, then extracts that event information once.
+
+12:
+  prompt: "If the Weibull shape parameter rho is greater than 1, what does that indicate?"
+  options:
+    - "The baseline event hazard increases as latent disease age advances"
+    - "The baseline event hazard is constant"
+    - "All subjects will experience the event at the same age"
+  answer: 0
+  feedback: >
+    For a Weibull survival model, rho greater than 1 corresponds to an increasing
+    baseline hazard. Rho equal to 1 gives a constant hazard, while rho below 1
+    gives a decreasing hazard.
+
+# --- demo questions for notebooks/00_template.ipynb -----------------------------
+
+13:
   prompt: "In a longitudinal dataset, what does a single *row* usually represent?"
   options:
     - "One patient"
@@ -124,7 +189,7 @@
     follow-up time. That repeated-measures structure is exactly what
     disease-progression models exploit.
 
-9:
+14:
   prompt: "What does the tau (time-shift) individual parameter capture in a Leaspy model?"
   options:
     - "How fast the subject progresses"

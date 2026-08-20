@@ -4,7 +4,7 @@ Call these from a notebook cell::
 
     import tutolib as tp
     tp.runquestion(1)     # interactive multiple-choice question
-    tp.solution(3)        # reveal a solution snippet, and run it for you
+    tp.solution(1)        # reveal a solution snippet, and run it for you
     tp.show_asset("sigmoid_interactive.html")
 
 Content is kept *outside* the code so anyone can author it without touching

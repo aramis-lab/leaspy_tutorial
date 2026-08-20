@@ -1,11 +1,4 @@
-# Same 1-source model, but with a single noise std shared by all the scores
-model_scalar_1_source = LogisticModel(
-    name="logistic", source_dimension=1, obs_models="gaussian-scalar"
-)
-
-model_scalar_1_source.fit(
-    df_train, "mcmc_saem",
-    seed=SEED, n_iter=1000, progress_bar=True,
-    save_periodicity=500,
-    overwrite_logs_folder=True,
-)
+# —— Let's select patients with at least two visits
+indices = [idx for idx in df_clean.index.unique("ID") if df_clean.loc[idx].shape[0] >= 2]
+df_clean = df_clean[df_clean.index.get_level_values(0).isin(indices)]
+df_clean.head()

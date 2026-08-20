@@ -8,9 +8,11 @@
 #
 # To add a question, just copy a block and bump the id. No Python needed.
 #
-# Ids follow the order in which the questions are met in notebooks/fit.ipynb
-# (1-4 for the fit part, 7-8 for the personalization part). 5 and 6 are the two
-# demo questions used by notebooks/00_template.ipynb.
+# Ids 1-7 follow the order in which the questions appear in notebooks/fit.ipynb.
+# If you insert a question in the middle of that notebook, renumber the ones
+# after it so the sequence keeps matching the reading order.
+# Ids 8-9 are the two demo questions used by notebooks/00_template.ipynb; keep
+# them last and bump them if fit.ipynb ever grows past 7 questions.
 
 1:
   prompt: "We fit three scores. Which value of `source_dimension` is NOT possible?"
@@ -64,30 +66,6 @@
     reconstructs the data slightly less well.
 
 5:
-  prompt: "In a longitudinal dataset, what does a single *row* usually represent?"
-  options:
-    - "One patient"
-    - "One visit of one patient (a patient x time observation)"
-    - "One clinical variable"
-  answer: 1
-  feedback: >
-    Each row is one visit: the same patient appears on several rows, one per
-    follow-up time. That repeated-measures structure is exactly what
-    disease-progression models exploit.
-
-6:
-  prompt: "What does the tau (time-shift) individual parameter capture in a Leaspy model?"
-  options:
-    - "How fast the subject progresses"
-    - "When the subject reaches the population's average disease stage"
-    - "The measurement noise for that subject"
-  answer: 1
-  feedback: >
-    Tau is the time-shift, a disease-onset offset: it says *when* a subject
-    reaches the average stage. The *speed* of progression is the separate
-    parameter xi.
-
-7:
   prompt: "GS-001 has tau = 68.58, while tau_mean = 62.19 for the population. What does this imply?"
   options:
     - "GS-001 starts deteriorating earlier than average"
@@ -99,7 +77,7 @@
     tau is a time-shift: a higher tau than tau_mean means this subject starts
     deteriorating later than average — a delayed onset.
 
-8:
+6:
   prompt: "GS-001 has xi = 1.45 > 0. What does this imply?"
   options:
     - "GS-001 starts deteriorating earlier than average"
@@ -112,14 +90,48 @@
     than average once symptoms start. Timing of onset is captured separately,
     by tau.
 
+# NOTE: question 7 is the reorder-the-workflow exercise at the end of the
+# personalization part. tutolib only knows how to render radio buttons, so it is
+# written here as a choice between four candidate orderings. A drag-and-drop
+# version, where the user reorders the four sentences themselves, would be nicer
+# but needs a new widget in tutolib.
+7:
+  prompt: "Put the whole prediction and evaluation workflow back in the correct sequence:"
+  options:
+    - "Fit on the train set → estimate the held-out visit → personalize the test patients → compare with the ground truth (MAE, R²)"
+    - "Personalize the test patients → fit on the train set → estimate the held-out visit → compare with the ground truth (MAE, R²)"
+    - "Fit on the train set → personalize the test patients → estimate the held-out visit → compare with the ground truth (MAE, R²)"
+    - "Fit on the train set → personalize the test patients → compare with the ground truth (MAE, R²) → estimate the held-out visit"
+  answer: 2
+  feedback: >
+    Fit comes first: it estimates the population parameters on the train set.
+    Only then can personalize infer each test patient's individual parameters,
+    from all their visits but the last. estimate evaluates that individual
+    trajectory at the held-out visit time, and comparing with the ground truth
+    can only happen once that prediction exists.
 
-#### QUESTION FOR MAYLIS (end of personalization part) #####
-# I added "tp.runquestion(8)" in my code but it doesn't work now, as the question isn't written here.
-# 9:
-  # prompt: " Reorder the whole prediction and evaluation workflow in the correct sequence":
-  # 1) Fit the Leaspy model on the training set to compute the population parameters.
-  # 2) Personalize unseen test patients using their incomplete trajectories (all visits except the last one to get the prediction metrics) to compute their individual parameters.
-  # 3) Estimate the outcomes at each patient's last visit using the previously computed individual parameters.
-  # 4) Compare predictions with the held-out ground truth and compute prediction metrics ($\text{MAE}, R^{2}$)
+# --- demo questions for notebooks/00_template.ipynb ---------------------------
 
-# This is the right order here. I would like to shuffle it and that the user has to reorder it in the right sequence by drag and dropping each sentence.
+8:
+  prompt: "In a longitudinal dataset, what does a single *row* usually represent?"
+  options:
+    - "One patient"
+    - "One visit of one patient (a patient x time observation)"
+    - "One clinical variable"
+  answer: 1
+  feedback: >
+    Each row is one visit: the same patient appears on several rows, one per
+    follow-up time. That repeated-measures structure is exactly what
+    disease-progression models exploit.
+
+9:
+  prompt: "What does the tau (time-shift) individual parameter capture in a Leaspy model?"
+  options:
+    - "How fast the subject progresses"
+    - "When the subject reaches the population's average disease stage"
+    - "The measurement noise for that subject"
+  answer: 1
+  feedback: >
+    Tau is the time-shift, a disease-onset offset: it says *when* a subject
+    reaches the average stage. The *speed* of progression is the separate
+    parameter xi.

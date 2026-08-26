@@ -103,10 +103,10 @@
 7:
   prompt: "Put the whole prediction and evaluation workflow back in the correct sequence:"
   options:
-    - "Fit on the train set → estimate the held-out visit → personalize the test patients → compare with the ground truth (MAE, R²)"
-    - "Personalize the test patients → fit on the train set → estimate the held-out visit → compare with the ground truth (MAE, R²)"
-    - "Fit on the train set → personalize the test patients → estimate the held-out visit → compare with the ground truth (MAE, R²)"
-    - "Fit on the train set → personalize the test patients → compare with the ground truth (MAE, R²) → estimate the held-out visit"
+    - A - "Fit on the train set → estimate the held-out visit → personalize the test patients → compare with the ground truth (MAE, R²)"
+    - B - "Personalize the test patients → fit on the train set → estimate the held-out visit → compare with the ground truth (MAE, R²)"
+    - C - "Fit on the train set → personalize the test patients → estimate the held-out visit → compare with the ground truth (MAE, R²)"
+    - D - "Fit on the train set → personalize the test patients → compare with the ground truth (MAE, R²) → estimate the held-out visit"
   answer: 2
   feedback: >
     Fit comes first: it estimates the population parameters on the train set.

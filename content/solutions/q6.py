@@ -1,10 +1,12 @@
-# Compare the two models: the lower the BIC / AIC, the better the fit
-summary_2_sources = model_2_sources.summary()
-summary_1_source = model_1_source.summary()
+# Same 1-source model, but with a single noise std shared by all the scores
+model_scalar_1_source = LogisticModel(
+    name="logistic", source_dimension=1, obs_models="gaussian-scalar"
+)
 
-print("2 sources")
-print(f"BIC: {float(summary_2_sources.bic)}")
-print(f"AIC: {float(summary_2_sources.aic)}")
-print("1 source")
-print(f"BIC: {float(summary_1_source.bic)}")
-print(f"AIC: {float(summary_1_source.aic)}")
+model_scalar_1_source.fit(
+    df_train, "mcmc_saem",
+    seed=SEED, n_iter=1000, progress_bar=True,
+    save_periodicity=500,
+    path="_outputs/model_scalar_1_source",
+    overwrite_logs_folder=True,
+)

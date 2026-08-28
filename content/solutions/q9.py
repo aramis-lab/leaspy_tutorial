@@ -1,13 +1,2 @@
-# Compare the four models: the lower the BIC / AIC, the better the fit
-models = {
-    "Diagonal noise, 2 sources": model_2_sources,
-    "Diagonal noise, 1 source": model_1_source,
-    "Scalar noise, 2 sources": model_scalar_2_sources,
-    "Scalar noise, 1 source": model_scalar_1_source,
-}
-
-for label, model in models.items():
-    summary = model.summary()
-    print(label)
-    print(f"BIC: {float(summary.bic)}")
-    print(f"AIC: {float(summary.aic)}")
+# Personalize the 100k-iteration model on the partial test set (last visit removed)
+ip_test = model_100k.personalize(data_test_partial, "scipy_minimize", seed=SEED, progress_bar=True)

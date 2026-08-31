@@ -1,9 +1,7 @@
-# A logistic model with a single source, fitted like the 2-source one
-model_1_source = LogisticModel(name="logistic", source_dimension=1)
+# Both scores already increase with severity, so they only need rescaling.
+# Divide each by the theoretical range of its questionnaire — not by the
+# maximum observed here, which depends on who happens to be in the cohort.
+df_clean["MDS1_total"] = df_clean["MDS1_total"] / 52    # MDS-UPDRS Part I: 0-52
+df_clean["SCOPA_total"] = df_clean["SCOPA_total"] / 69  # SCOPA-AUT: 0-69
 
-model_1_source.fit(
-    df_train, "mcmc_saem",
-    seed=SEED, n_iter=1000, progress_bar=True,
-    save_periodicity=500,
-    overwrite_logs_folder=True,
-)
+df_clean[["MDS1_total", "SCOPA_total"]].agg(["min", "max"])

@@ -1,7 +1,6 @@
-# Generate a new cohort from the fitted model and the visit design
-simulated = model_100k.simulate(
-    algorithm="simulate",
-    features=FEATURES,
-    visit_parameters=visit_parameters,
-    seed=SEED,
-)
+# Tell Leaspy that this dataframe contains both visits and an event outcome.
+data_joint = Data.from_dataframe(df_joint, data_type="joint")
+
+print(f"{data_joint.n_individuals} subjects")
+print(f"{data_joint.n_visits} visits")
+print(f"Longitudinal features: {data_joint.headers}")

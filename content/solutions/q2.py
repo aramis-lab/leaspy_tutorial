@@ -1,2 +1,5 @@
-# Feature_2 is already between 0 and 1, but decreases with disease severity. Invert it.
-df_clean["Feature_2"] = 1 - df_clean["Feature_2"]
+# MoCA runs 0-31 and *decreases* with severity (31 = normal cognition).
+# Rescale and flip in one step: 0 stays "normal", 1 becomes "most impaired".
+df_clean["MOCA_total"] = 1 - df_clean["MOCA_total"] / 31
+
+df_clean.agg(["min", "max"])

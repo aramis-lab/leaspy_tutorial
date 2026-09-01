@@ -1,23 +1,9 @@
-# Multiple-choice questions for the tutorial.
-#
-# One entry per question, keyed by an id you pass to tutolib.runquestion(<id>).
-#   prompt   : the question text
-#   options  : list of choices shown as radio buttons
-#   answer   : index of the correct option (0-based: first option is 0)
-#   feedback : shown when the user picks a wrong answer (keep it short, 1-3 lines)
-#
-# To add a question, just copy a block and bump the id. No Python needed.
-#
-# Ids 1-12 follow the order in which the questions appear in notebooks/fit.ipynb:
-#   1-2    Fit and convergence
-#   3-4    Model comparison
-#   5-7    Personalization and prediction
-#   8-9    Simulation
-#   10-12  Extension: joint model
-# If you insert a question in the middle of that notebook, renumber the ones
-# after it so the sequence keeps matching the reading order.
-# Ids 13-14 are the two demo questions used by notebooks/00_template.ipynb; keep
-# them last and bump them if fit.ipynb ever grows past 12 questions.
+# Multiple-choice questions, one block per id: prompt / options / answer
+# (0-based index) / feedback (shown on a wrong pick). Notebooks call a block by
+# id with tutolib.runquestion(<id>), so ids are labels, not an order: add one by
+# copying a block and taking a free id, and never renumber an existing id
+# without updating the calls that use it.
+# Ids 1-12 belong to notebooks/fit.ipynb, 13-14 to notebooks/00_template.ipynb.
 
 1:
   prompt: "We fit three scores. Which value of `source_dimension` is NOT possible?"

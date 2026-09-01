@@ -1,6 +1,12 @@
-# Tell Leaspy that this dataframe contains both visits and an event outcome.
-data_joint = Data.from_dataframe(df_joint, data_type="joint")
+# And the 2-source model with a scalar noise
+model_scalar_2_sources = LogisticModel(
+    name="logistic", source_dimension=2, obs_models="gaussian-scalar"
+)
 
-print(f"{data_joint.n_individuals} subjects")
-print(f"{data_joint.n_visits} visits")
-print(f"Longitudinal features: {data_joint.headers}")
+model_scalar_2_sources.fit(
+    df_train, "mcmc_saem",
+    seed=SEED, n_iter=1000, progress_bar=True,
+    save_periodicity=500,
+    path="_outputs/model_scalar_2_sources",
+    overwrite_logs_folder=True,
+)

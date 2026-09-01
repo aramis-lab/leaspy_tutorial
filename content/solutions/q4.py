@@ -1,10 +1,2 @@
-# A logistic model with a single source, fitted like the 2-source one
-model_1_source = LogisticModel(name="logistic", source_dimension=1)
-
-model_1_source.fit(
-    df_train, "mcmc_saem",
-    seed=SEED, n_iter=1000, progress_bar=True,
-    save_periodicity=500,
-    path="_outputs/model_1_source",
-    overwrite_logs_folder=True,
-)
+# Personalize the 100k-iteration model on the partial test set (last visit removed)
+ip_test = model_100k.personalize(data_test_partial, "scipy_minimize", seed=SEED, progress_bar=True)
